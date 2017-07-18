@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="yukami.notification.MainActivity">
+
+    <Button
+        android:id="@+id/buttonBasic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Basic"
+        tools:layout_editor_absoluteX="147dp"
+        tools:layout_editor_absoluteY="86dp"
+        android:onClick="sendNotification"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/buttonBigPicture"
+        android:layout_marginTop="116dp" />
+
+    <Button
+        android:id="@+id/buttonBigPicture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Big Picture"
+        tools:layout_editor_absoluteX="147dp"
+        tools:layout_editor_absoluteY="182dp"
+        android:onClick="sendNotification"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/Inbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inbox"
+        tools:layout_editor_absoluteX="147dp"
+        tools:layout_editor_absoluteY="284dp"
+        android:layout_below="@+id/buttonBigPicture"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="53dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Action"
+        android:id="@+id/buttonAction"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="34dp"
+        android:onClick="sendNotification"/>
+
+</RelativeLayout>
