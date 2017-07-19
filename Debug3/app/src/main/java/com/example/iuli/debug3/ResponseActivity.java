@@ -1,11 +1,10 @@
-package yukami.weather;
+package com.example.iuli.debug3;
 
-
+import android.app.NotificationManager;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -13,30 +12,56 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends AppCompatActivity {
+public class ResponseActivity extends AppCompatActivity {
     private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+    String gb;
+    private final static String serverIP = "192.168.1.225";
+    private final static int serverPort = 5037; //TODO NU STIU CARE II PORTUL CORECT!?
+    private final static String fileOutput =  "data.txt"; //"C:\\testout.pdf";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_response);
 
+        TextView response = (TextView) findViewById(R.id.response);
+        response.setText("Thanks for your answer. We wait for you next day at " + this.getResources().getInteger(R.integer.startHour) + "h.");
+
+        Intent intent = this.getIntent();
+        gb = intent.getStringExtra("how");
+
+        //we cancel the notification
+        NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(123);
+    }
+
+    //we get the temperature and we write in the file day + Good/Bad + temperature
+    @Override
+    public void onResume() {
+        super.onResume();
         String weatherData = null;
         try {
             weatherData = new getURLData().execute(URL).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        if (weatherData == null) System.out.println("weather data = NULL!!!!!");
-        else System.out.println(weatherData);
 
         JSONObject obj = null;
         try {
@@ -74,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < arr.length(); i++) {
             try {
-                System.out.println(arr.getJSONObject(i).toString());
 
                 dt_compare = arr.getJSONObject(i).getString("dt_txt");
             } catch (JSONException e) {
@@ -105,6 +129,44 @@ public class MainActivity extends AppCompatActivity {
         average_temp = average_temp-273.15; //celsius
 
         System.out.println("AVERAGE TEMPERATURE OF TOMORROW IS : " + average_temp + " en celsius");
+
+        writeToFile("answered.txt", String.valueOf(true), this);
+
+        Calendar calendar = GregorianCalendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        writeToFile("data.txt", day + " " + gb + " " + average_temp + '\n', getApplicationContext());
     }
+
+    private void writeToFile(String fileName, String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter;
+            if (fileName == "data.txt") outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            else outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(data + '\n');
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+
+        new TCPClient().execute(fileOutput);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        Intent startMain = new Intent(Intent.ACTION_MAIN);
+        startMain.addCategory(Intent.CATEGORY_HOME);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(startMain);
+    }
+
 
 }
