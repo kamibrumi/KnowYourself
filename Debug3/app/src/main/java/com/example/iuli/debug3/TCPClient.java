@@ -13,7 +13,7 @@ public class TCPClient extends AsyncTask<String, Integer, String> {
     private final static String fileOutput =  "data.txt"; //"C:\\testout.pdf";
 
     @Override
-    protected String doInBackground(String... location) {
+    protected String doInBackground(String... ip) {
         byte[] aByte = new byte[1];
         int bytesRead;
 

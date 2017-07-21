@@ -9,7 +9,7 @@ public class TCPClient {
 
     private String serverMessage;
     public static final String SERVERIP = "192.168.1.225"; //your computer IP address
-    public static final int SERVERPORT = 41819;
+    public static final int SERVERPORT = 55160;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
 
@@ -27,7 +27,7 @@ public class TCPClient {
      * Sends the message entered by client to the server
      * @param message text entered by client
      */
-    public void sendMessage(String message){
+    public void sendMessage(String message) {
         if (out != null && !out.checkError()) {
             out.println(message);
             out.flush();

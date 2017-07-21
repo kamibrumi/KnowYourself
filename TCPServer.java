@@ -8,7 +8,7 @@ import java.net.Socket;
  */
 public class TCPServer extends Thread {
 
-    public static final int SERVERPORT = 41819;
+    public static final int SERVERPORT = 55160;
     private boolean running = false;
     private PrintWriter mOut;
     private OnMessageReceived messageListener;
@@ -97,5 +97,7 @@ public class TCPServer extends Thread {
     public interface OnMessageReceived {
         public void messageReceived(String message);
     }
+
+
 
 }

@@ -35,8 +35,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
-        if (weatherData == null) System.out.println("weather data = NULL!!!!!");
-        else System.out.println(weatherData);
+        System.out.println(weatherData);
 
         JSONObject obj = null;
         try {
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     main = arr.getJSONObject(i).getJSONObject("main");
                     System.out.println("MAIN IN STRING: " + main.toString());
-                    average_temp += main.getDouble("temp");
+                    average_temp += main.getDouble("temp"); //in kelvins
                     System.out.println("temperatura: " + main.getDouble("temp"));
                     System.out.println("temperatura: " + main.getDouble("temp_min"));
                 } catch (JSONException e) {

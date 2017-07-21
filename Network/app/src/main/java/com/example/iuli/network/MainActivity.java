@@ -1,4 +1,5 @@
 package com.example.iuli.network;
+
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -6,23 +7,21 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 
 public class MainActivity extends Activity
 {
     private TCPClient mTcpClient;
     TextView serverResponse;
     TextView clientTv;
+    String fileName = "data2.txt";
+
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -30,7 +29,7 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        writeToFile("hey there!", this);
+        writeToFile("\r\n meh!! \n", this);
         Button send = (Button)findViewById(R.id.send_button);
         serverResponse = (TextView) findViewById(R.id.serverResponse);
         clientTv = (TextView) findViewById(R.id.clientMessage);
@@ -83,7 +82,7 @@ public class MainActivity extends Activity
     private void writeToFile(String data, Context context) {
         try {
             OutputStreamWriter outputStreamWriter;
-            outputStreamWriter = new OutputStreamWriter(context.openFileOutput("data1.txt", Context.MODE_APPEND));
+            outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
@@ -96,7 +95,7 @@ public class MainActivity extends Activity
         String ret = "";
 
         try {
-            InputStream inputStream = this.openFileInput("data1.txt");
+            InputStream inputStream = this.openFileInput(fileName);
 
             if ( inputStream != null ) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -105,7 +104,7 @@ public class MainActivity extends Activity
                 StringBuilder stringBuilder = new StringBuilder();
 
                 while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
+                    stringBuilder.append(receiveString); //TRIMITE   LINIE CU LINIE!!
                 }
 
                 inputStream.close();
