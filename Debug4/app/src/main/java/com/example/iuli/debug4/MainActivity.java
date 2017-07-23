@@ -5,6 +5,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     TextView question;
     TextView debug; //TODO: elimina-l cand termini cu el
     Boolean answered;
-    int startHour;
+    int startHour, hour, minute;
 
 
 
@@ -62,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();  // Always call the superclass method first
 
         Calendar calendar = GregorianCalendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        hour = calendar.get(Calendar.HOUR_OF_DAY);
+
 
         startHour = this.getResources().getInteger(R.integer.startHour);
         raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             answered = Boolean.valueOf(readFromFile("answered.txt", this));
             if (!answered) {
+
                 //WE LAUNCH THE NOTIFICATION
                 Intent notifyIntent = new Intent(this,MyReceiver.class);
                 PendingIntent pendingIntent = PendingIntent.getBroadcast
@@ -78,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
                 AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
                         1000 * 24 * 60 * 60, pendingIntent);
+
+                //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                Intent weatherIntent = new Intent(this,WeatherReceiver.class);
+                PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                        (this, 1, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+                alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
+                        1000 * 10, weatherPendingIntent);
 
                 button_great.setVisibility(View.VISIBLE);
                 button_naspa.setVisibility(View.VISIBLE);
@@ -94,6 +106,20 @@ public class MainActivity extends AppCompatActivity {
         button_great.setVisibility(View.GONE);
         button_naspa.setVisibility(View.GONE);
         question.setVisibility(View.GONE);
+
+        if (hour >= startHour) {
+            writeToFile("answered.txt", String.valueOf(false), this);
+            answered = Boolean.valueOf(readFromFile("answered.txt", this));
+            Calendar calendar = GregorianCalendar.getInstance();
+            minute = calendar.get(Calendar.MINUTE);
+            if (!answered && minute == 4) {
+
+                button_great.setVisibility(View.VISIBLE);
+                button_naspa.setVisibility(View.VISIBLE);
+                question.setVisibility(View.VISIBLE);
+                raspuns.setText("");
+            }
+        }
 
     }
 
@@ -162,5 +188,12 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }

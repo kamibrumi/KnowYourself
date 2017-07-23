@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
                 (this, 1, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                1000 * 9, pendingIntent);
+                1000 * 2, pendingIntent);
 
 
 

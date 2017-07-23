@@ -10,6 +10,9 @@ import android.os.Build;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.NotificationCompat;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 public class MyNewIntentService extends IntentService {
     private static final int NOTIFICATION_ID = 3;
 
@@ -22,7 +25,7 @@ public class MyNewIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        /* NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setAutoCancel(true);
         builder.setContentTitle("KY");
         builder.setContentText("Cum ti-a fost ziulica?!");
@@ -44,6 +47,15 @@ public class MyNewIntentService extends IntentService {
 
         Notification notification = builder.build();
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(123, notification);
+        manager.notify(123, notification); */
+
+        Calendar calendar = GregorianCalendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        if (minute == 29 || minute == 30 || minute == 31) {
+            System.out.println("MINUTUL: " + minute);
+        }
+
     }
 }
