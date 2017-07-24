@@ -71,8 +71,17 @@ public class MainActivity extends AppCompatActivity {
         raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
         if (hour < startHour) {
             writeToFile("answered.txt", String.valueOf(false), this);
+
+            //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+            Intent weatherIntent = new Intent(this,WeatherReceiver.class);
+            PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                    (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
+                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
         } else {
             answered = Boolean.valueOf(readFromFile("answered.txt", this));
+            System.out.println("ANSWERED VALUE: " + String.valueOf(answered));
             if (!answered) {
 
                 //WE LAUNCH THE NOTIFICATION
@@ -82,14 +91,6 @@ public class MainActivity extends AppCompatActivity {
                 AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
                         1000 * 24 * 60 * 60, pendingIntent);
-
-                //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                Intent weatherIntent = new Intent(this,WeatherReceiver.class);
-                PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                        (this, 1, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-                alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
-                        1000 * 10, weatherPendingIntent);
 
                 button_great.setVisibility(View.VISIBLE);
                 button_naspa.setVisibility(View.VISIBLE);
@@ -106,20 +107,6 @@ public class MainActivity extends AppCompatActivity {
         button_great.setVisibility(View.GONE);
         button_naspa.setVisibility(View.GONE);
         question.setVisibility(View.GONE);
-
-        if (hour >= startHour) {
-            writeToFile("answered.txt", String.valueOf(false), this);
-            answered = Boolean.valueOf(readFromFile("answered.txt", this));
-            Calendar calendar = GregorianCalendar.getInstance();
-            minute = calendar.get(Calendar.MINUTE);
-            if (!answered && minute == 4) {
-
-                button_great.setVisibility(View.VISIBLE);
-                button_naspa.setVisibility(View.VISIBLE);
-                question.setVisibility(View.VISIBLE);
-                raspuns.setText("");
-            }
-        }
 
     }
 

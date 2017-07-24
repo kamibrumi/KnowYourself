@@ -11,30 +11,23 @@ import java.net.URL;
 
 public class getURLData extends AsyncTask<String, Integer, String> {
 
-    private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";//use this instead of using BASE_URL and IULIS_KEY, now it works as espected
+    //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";//use this instead of using BASE_URL and IULIS_KEY, now it works as espected
     //private static String BASE_URL = "http://api.openweathermap.org/data/2.5/forecast?q=";
     //private static String IULIS_KEY = "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
     private static String IMG_URL = "http://openweathermap.org/img/w/";
 
     @Override
-    protected String doInBackground(String... location) {
+    protected String doInBackground(String... URL) {
         HttpURLConnection con = null ;
         InputStream is = null;
 
         try {
-            con = (HttpURLConnection) ( new URL(URL)).openConnection();
-            System.out.println("------------S-A FACUT OPENCONNEC");
+            con = (HttpURLConnection) ( new URL(URL[0])).openConnection();
             con.setRequestMethod("GET");
-            System.out.println("con.setRequestMethod(\"GET\");");
             con.setDoInput(true);
-            System.out.println("con.setDoInput(true);");
 
             con.setDoOutput(true);
-            System.out.println("con.setDoOutput(true);");
             con.connect();
-            System.out.println("con.connect();");
-            //chivato
-            System.out.println("-----------S-A CONNECTAT");
             // Let's read the response
             StringBuffer buffer = new StringBuffer();
             is = con.getInputStream();
@@ -42,12 +35,9 @@ public class getURLData extends AsyncTask<String, Integer, String> {
             String line = null;
             while ( (line = br.readLine()) != null )
                 buffer.append(line + "rn");
-            if (line == null) System.out.println("-----------LINE IS NULL!!!!!!");
-            else System.out.println("------------------LINE = " + line);
 
             is.close();
             con.disconnect();
-            System.out.println("-----------------S-A DESCONNECTAT");
             return buffer.toString();
         }
         catch(Throwable t) {

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
@@ -21,10 +22,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ResponseActivity extends AppCompatActivity {
     private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
@@ -95,7 +100,7 @@ public class ResponseActivity extends AppCompatActivity {
         dt = sdf.format(c.getTime());  // dt is now the new date
 
 
-        double average_temp = 0;
+        double tomorrowAverageTemp = 0;
         int nrOfHours = 0;
         String dt_compare = null;
 
@@ -112,7 +117,7 @@ public class ResponseActivity extends AppCompatActivity {
                 JSONObject main = null;
                 try {
                     main = arr.getJSONObject(i).getJSONObject("main");
-                    average_temp += main.getDouble("temp");
+                    tomorrowAverageTemp += main.getDouble("temp");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -120,14 +125,29 @@ public class ResponseActivity extends AppCompatActivity {
 
 
         }
-        average_temp = average_temp / nrOfHours; // kelvin
-        average_temp = average_temp - 273.15; //celsius
+        tomorrowAverageTemp = tomorrowAverageTemp / nrOfHours; // kelvin
+        tomorrowAverageTemp = tomorrowAverageTemp - 273.15; //celsius
 
         writeToFile("answered.txt", String.valueOf(true), this);
 
         Calendar calendar = GregorianCalendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
-        writeToFile("data3.txt", " " + day + " " + gb + " " + average_temp, getApplicationContext());
+
+        //we get today's temperatures and we calculate an average
+        Pattern p = Pattern.compile("[-+]?[0-9]*\\.[0-9]+");
+        Matcher m = p.matcher(readFromFile("currentWeather.txt"));
+
+        double currentWeatherSum = 0;
+        int nrOfSamples = 0;
+        while (m.find()) {
+            ++nrOfSamples;
+            System.out.println("temperatura " + nrOfSamples + "= " + m.group());
+            currentWeatherSum += Double.valueOf(m.group());
+        }
+        Double todayAverageTemp = currentWeatherSum/nrOfSamples; // in celsius
+
+
+        writeToFile("data3.txt", " " + day + " " + gb + " " + tomorrowAverageTemp + " " + todayAverageTemp, getApplicationContext());
         // connect to the server
         new connectTask().execute("");
     }
@@ -165,7 +185,7 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     public void sendMessageToServer() {
-        String message = readFromFile();
+        String message = readFromFile("data3.txt");
         System.out.println("MESAJUL CARE TREBUIE TRIMIS PRIN SERVER: " + message);
 
         //sends the message to the server
@@ -203,12 +223,15 @@ public class ResponseActivity extends AppCompatActivity {
         }
     }
 
-    private String readFromFile() {
+    private String readFromFile(String fileName) {
 
         String ret = "";
 
         try {
-            InputStream inputStream = this.openFileInput("data3.txt");
+            InputStream inputStream = null;
+            if (fileName == "data3.txt") inputStream = this.openFileInput(fileName);
+            else if (fileName == "currentWeather.txt") inputStream = this.openFileInput(fileName);
+
 
             if ( inputStream != null ) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
