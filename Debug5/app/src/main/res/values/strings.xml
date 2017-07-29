@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Debug5</string>
+    <string name="dataFile">data4.txt</string>
+    <string name="answeredFile">answered2.txt</string>
+</resources>

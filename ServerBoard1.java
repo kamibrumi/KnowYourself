@@ -51,8 +51,8 @@ public class ServerBoard1 {
 						BufferedWriter bw = null;
 						FileWriter fw = null;
 
-						//pattern: day + " " + good/bad + " " + tomorrowAverageTemp + " " + todayAverageTemp
-						Pattern p = Pattern.compile("[1-9] [a-zA-Z]* [-+]?[0-9]*\\.[0-9]+ [-+]?[0-9]*\\.[0-9]+"); // 
+						//day + gb + nightAverageTemp + nightStdDev + dayAverageTemp + dayStdDev + tomorrowAverageTemp
+						Pattern p = Pattern.compile("[1-9] [a-zA-Z]* [-+]?[0-9]*\\.[0-9]+ [-+]?[0-9]*\\.[0-9]+ [-+]?[0-9]*\\.[0-9]+ [-+]?[0-9]*\\.[0-9]+ [-+]?[0-9]*\\.[0-9]+");
 						Matcher m = p.matcher(message);
 						String realData = "";
 

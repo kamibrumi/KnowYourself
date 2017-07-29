@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.camelia.debug5.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cum ti-a fost ziulica?"
+        android:id="@+id/intrebare"
+        android:layout_marginTop="147dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="20dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Good"
+        android:id="@+id/good"
+        android:onClick="sendMessage"
+        android:layout_alignTop="@+id/bad"
+        android:layout_alignLeft="@+id/intrebare"
+        android:layout_alignStart="@+id/intrebare" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bad"
+        android:id="@+id/bad"
+        android:layout_centerVertical="true"
+        android:layout_alignRight="@+id/intrebare"
+        android:layout_alignEnd="@+id/intrebare"
+        android:visibility="visible"
+        android:onClick="sendMessage"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/raspuns"
+        android:layout_below="@id/good"
+        android:layout_marginTop="20dp"
+        android:layout_alignLeft="@id/good"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/debug"
+        android:layout_below="@+id/raspuns"/>
+
+</RelativeLayout>

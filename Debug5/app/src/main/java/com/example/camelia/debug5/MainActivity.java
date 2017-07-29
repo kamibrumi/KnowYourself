@@ -1,4 +1,4 @@
-package com.example.iuli.debug4;
+package com.example.camelia.debug5;
 
 
 import android.app.AlarmManager;
@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -49,21 +50,30 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
         System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
 
-        try {
-            debug.setText(readFromFile("data3.txt", this) + " " + readFromFile("answered.txt", this));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
         button_great.setVisibility(View.GONE);
         button_naspa.setVisibility(View.GONE);
         question.setVisibility(View.GONE);
+
     }
 
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
+
+        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+        Intent weatherIntent = new Intent(this,WeatherReceiver.class);
+        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        try {
+            System.out.println("WEATHER PENDING INTENT TO SEND");
+            weatherPendingIntent.send(this, 0, weatherIntent);
+            System.out.println("WEATHER PENDING INTENT SENT");
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+        AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis(),
+                1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h)
 
         Calendar calendar = GregorianCalendar.getInstance();
         hour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -72,21 +82,16 @@ public class MainActivity extends AppCompatActivity {
         startHour = this.getResources().getInteger(R.integer.startHour);
         raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
         if (hour < startHour) {
-            writeToFile("answered.txt", String.valueOf(false), this);
-
-            //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-            Intent weatherIntent = new Intent(this,WeatherReceiver.class);
-            PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                    (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
-                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h)
+            writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
         } else {
+            String answeredContent = null;
             try {
-                answered = Boolean.valueOf(readFromFile("answered.txt", this));
+                answeredContent = readFromFile(getString(R.string.answeredFile), this);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            if (answeredContent == null) answered = false;
+            answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
             System.out.println("ANSWERED VALUE: " + String.valueOf(answered));
             if (!answered) {
 
@@ -126,8 +131,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void writeToFile(String fileName, String data, Context context) {
         try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            if (fileName == getString(R.string.answeredFile)) outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(data + '\n');
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+/*
+    private void writeToFile(String fileName, String data, Context context) {
+        try {
             OutputStreamWriter outputStreamWriter;
-            if (fileName == "data3.txt") outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            if (fileName == getString(R.string.dataFile)) outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
             else outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
@@ -136,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
-    }
+    } */
 
     private String readFromFile(String fileName, Context context) throws IOException {
 
@@ -160,10 +177,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         catch (FileNotFoundException e) {
-            //Log.e("login activity", "File not found: " + e.toString());
-            File yourFile = new File(fileName);
-            yourFile.createNewFile(); // if file already exists will do nothing
-            readFromFile(fileName, context);
+            Log.e("login activity", "File not found: " + e.toString());
+            //File yourFile = new File(fileName);
+            //yourFile.createNewFile(); // if file already exists will do nothing
+            //readFromFile(fileName, context);
         } catch (IOException e) {
             Log.e("login activity", "Can not read file: " + e.toString());
         }
@@ -172,14 +189,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendMessage(View view) throws IOException {
-        answered = Boolean.valueOf(readFromFile("answered.txt", this));
         if (!answered) {
             Button button = (Button) view;
+            System.out.println("1111111111111111111111");
             String howWasYourDay = button.getText().toString();
+            System.out.println("22222222222222222222222222");
 
+            System.out.println("33333333333333333");
             //we start the response activity
             Intent intent = new Intent(this, ResponseActivity.class);
+            System.out.println("444444444444444444444444444444444");
             intent.putExtra("how", howWasYourDay);
+            System.out.println("55555555555555555555555");
             startActivity(intent);
 
 

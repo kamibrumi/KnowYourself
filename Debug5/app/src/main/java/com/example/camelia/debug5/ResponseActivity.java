@@ -1,4 +1,4 @@
-package com.example.iuli.debug4;
+package com.example.camelia.debug5;
 
 import android.app.NotificationManager;
 import android.content.Context;
@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,7 +63,7 @@ public class ResponseActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        System.out.println("PRINT 1 --------------");
+        //System.out.println("PRINT 1 --------------");
 
         String weatherData = null;
         try {
@@ -69,7 +71,7 @@ public class ResponseActivity extends AppCompatActivity {
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        System.out.println("PRINT 2 --------------");
+        //System.out.println("PRINT 2 --------------");
         JSONObject obj = null;
         try {
             obj = new JSONObject(weatherData);
@@ -83,7 +85,7 @@ public class ResponseActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        System.out.println("PRINT 3 --------------");
+        //System.out.println("PRINT 3 --------------");
 
         //we get tomorrow's date
         Date date = new Date();
@@ -98,17 +100,21 @@ public class ResponseActivity extends AppCompatActivity {
         }
         c.add(Calendar.DATE, 1);  // number of days to add
         dt = sdf.format(c.getTime());  // dt is now the new date
-        System.out.println("PRINT 4 --------------");
+        //System.out.println("PRINT 4 --------------");
         //we start calculating the average and standard deviation of tomorrow (day and night separatelly)
         double dayTomorrowAverageTemp = 0;
         double nightTomorrowAverageTemp = 0;
+
         ArrayList<Double> dayTomorrowTemps = new ArrayList<>();
         ArrayList<Double> nightTomorrowTemps = new ArrayList<>();
+
+        //System.out.println("PRINT 5 --------------");
         int nrOfHoursDay = 0;
         int nrOfHoursNight = 0;
         String dt_compare = null;
 
         for (int i = 0; i < arr.length(); i++) {
+            //System.out.println("PRINT 6 --------------loop " + i);
             try {
 
                 dt_compare = arr.getJSONObject(i).getString("dt_txt");
@@ -119,8 +125,8 @@ public class ResponseActivity extends AppCompatActivity {
                 Pattern hourP = Pattern.compile("[0-9]*:[0-9]*:[0-9]*");
                 Matcher hourM = hourP.matcher(dt_compare);
                 if (hourM.find()) {
-                    System.out.print("ORA: " + hourM.group());
-                    int hour = Integer.parseInt(hourM.group().substring(1, 2)); // we get the hour int
+                    //System.out.println("ORA: " + hourM.group());
+                    int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
                     JSONObject main = null;
                     Double t = 25.;
                     try {
@@ -131,16 +137,17 @@ public class ResponseActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     if (hour <= 8) {
-                        System.out.print("ORA day: " + hourM.group());
                         ++nrOfHoursNight;
                         nightTomorrowAverageTemp += t;
                         nightTomorrowTemps.add(t);
+                        //System.out.println("ORA night: " + hour);
+
                     }
                     else {
-                        System.out.print("ORA night: " + hourM.group());
                         ++nrOfHoursDay;
                         dayTomorrowAverageTemp += t;
                         dayTomorrowTemps.add(t);
+                        //System.out.println("ORA day: " + hour);
                     }
                 }
             }
@@ -151,27 +158,23 @@ public class ResponseActivity extends AppCompatActivity {
         dayTomorrowAverageTemp = dayTomorrowAverageTemp - 273.15; //celsius
         nightTomorrowAverageTemp = nightTomorrowAverageTemp - 273.15; //celsius
 
+        //System.out.println("PRINT 7 --------------");
         dayTomorrowAverageTemp = dayTomorrowAverageTemp / nrOfHoursDay; // kelvin
         nightTomorrowAverageTemp = nightTomorrowAverageTemp / nrOfHoursNight; // kelvin
+        //System.out.println("PRINT 8 --------------");
 
-        double dayTomorrowStdDev = getStdDev(getVariance(dayTomorrowAverageTemp, dayTomorrowTemps));
+        double v = getVariance(dayTomorrowAverageTemp, dayTomorrowTemps);
+        //System.out.println("PRINT 8v --------------");
+        double dayTomorrowStdDev = getStdDev(v);
+
+
         double nightTomorrowStdDev = getStdDev(getVariance(nightTomorrowAverageTemp, nightTomorrowTemps));
+        //System.out.println("PRINT 9 --------------");
 
         Calendar calendar = GregorianCalendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
 
         //we calculate average temperature of the current night and day
-        File file1 = new File("nightCurrentWeather.txt");
-        if (file1.length() == 0) {
-            System.out.println("FILE NIGHT NOT NOT");
-        }
-
-        File file2 = new File("dayCurrentWeather.txt");
-        if (file2.length() == 0) {
-            System.out.println("FILE DAY NOT NOT");
-        }
-
-
 
         ArrayList<Double> nightTemps = getTempArrayList("nightCurrentWeather.txt");
         ArrayList<Double> dayTemps = getTempArrayList("dayCurrentWeather.txt");
@@ -182,18 +185,32 @@ public class ResponseActivity extends AppCompatActivity {
         double nightStdDev = getStdDev(getVariance(nightAverageTemp, nightTemps));
         double dayStdDev = getStdDev(getVariance(dayAverageTemp, dayTemps));
 
-        writeToFile("data3.txt", " " + day + " " + gb + " " + nightAverageTemp + " " + nightStdDev + " " + dayAverageTemp + " " + dayStdDev + " " + nightTomorrowAverageTemp + " " + nightTomorrowStdDev + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDev, getApplicationContext());
+        writeToFile(getString(R.string.dataFile), " " + day + " " + gb + " " + nightAverageTemp + " " + nightStdDev + " " + dayAverageTemp + " " + dayStdDev + " " + nightTomorrowAverageTemp + " " + nightTomorrowStdDev + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDev, getApplicationContext());
 
-        writeToFile("answered.txt", String.valueOf(true), this);
+        writeToFile(getString(R.string.answeredFile), String.valueOf(true), this);
         // connect to the server
         new connectTask().execute("");
     }
 
+    private void writeToFile(String fileName, String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter;
+            if (fileName == getString(R.string.dataFile))
+                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            else outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(data + '\n');
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+    /*
     private void writeToFile(String nameOfFile, String data, Context context) {
         try {
             OutputStreamWriter outputStreamWriter;
-            if (nameOfFile == "data3.txt") //whe we write into the data file
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput("data3.txt", Context.MODE_APPEND));
+            if (nameOfFile == getString(R.string.dataFile)) //whe we write into the data file
+                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(getString(R.string.dataFile), Context.MODE_APPEND));
             else //when we write into the booleans file
                 outputStreamWriter = new OutputStreamWriter(context.openFileOutput(nameOfFile, Context.MODE_PRIVATE));
             outputStreamWriter.write(data + '\n');
@@ -201,7 +218,7 @@ public class ResponseActivity extends AppCompatActivity {
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
-    }
+    } */
 
     @Override
     protected void onStop() {
@@ -222,10 +239,11 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     public void sendMessageToServer() {
-        String message = readFromFile("data3.txt");
-
+        String message = readFromFile(getString(R.string.dataFile));
+        System.out.println(message);
         //sends the message to the server
         if (mTcpClient != null) {
+            System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
             mTcpClient.sendMessage(message);
         }
     }
@@ -299,7 +317,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         while (m.find())
             temps.add(Double.valueOf(m.group()));
-
+        //System.out.println("PRINT 10(getarrayfun) --------------");
         return temps;
     }
 
@@ -309,6 +327,7 @@ public class ResponseActivity extends AppCompatActivity {
         for(int i = 0; i < s; ++i) {
             sum += arr.get(i);
         }
+        //System.out.println("PRINT 11(get average) --------------");
         return sum/s;
     }
 
@@ -317,13 +336,15 @@ public class ResponseActivity extends AppCompatActivity {
     {
         double sum = 0;
         int s = arr.size();
-        for(int i = 1; i <= s; ++i)
+        for(int i = 0; i < s; ++i)
             sum += (arr.get(i)-average)*(arr.get(i)-average);
+        //System.out.println("PRINT 12(get variance) --------------");
         return sum/s;
     }
 
     private double getStdDev(double variance)
     {
+        //System.out.println("PRINT 13(get stdvDev) --------------");
         return Math.sqrt(variance);
     }
 }
