@@ -53,17 +53,23 @@ public class CurrentWeatherIntentService extends IntentService{
         }
         //System.out.println("am luat json object-ul");
 
-        double currentTemp = 25; //initialized because I had problems with String.valueOf() (variable not declared)
+        JSONObject main = null;
+        Double currentTemp = 25.;
+        Double pressure = 1020.;
+        Double humid = 50.;
         try {
-            currentTemp = obj.getJSONObject("main").getDouble("temp");
-            //System.out.println("CURRENT TEMP= " + currentTemp);
+            main = obj.getJSONObject("main");
+            currentTemp = main.getDouble("temp");
+            pressure = main.getDouble("pressure");
+            humid = main.getInt("humidity") * 1.; // convert it from int to double
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         String currentDateId = String.valueOf(dayOfMonth) + String.valueOf(month); //we use it to overwrite yesterday's currentWeather file (see writeToFile method)
         currentTemp = currentTemp - 273.15; //in celsius
-        //System.out.println("inainte de a scrie in fisier");
+
         String fileName = "";
         if (hour <= 8) fileName = "nightCurrentWeather.txt";
         else if (hour >= 9) fileName = "dayCurrentWeather.txt";
@@ -74,7 +80,7 @@ public class CurrentWeatherIntentService extends IntentService{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (fileContent == null) writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp), this, false, ""); //we converted kelvin to celsius
+        if (fileContent == null) writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid), this, false, ""); //we converted kelvin to celsius
         else {
             //we'll obtain just the first word of the string because we want to avoid the case that a temperature contains the currentDateId. this wold leave to wrong results.
             String arr[] = fileContent.split(" ", 2);
@@ -82,7 +88,7 @@ public class CurrentWeatherIntentService extends IntentService{
             writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp), this, true, currentDate); //we converted kelvin to celsius
         }
         //System.out.println("pusca?");
-        System.out.println("s-a terminat intentul");
+        //System.out.println("s-a terminat intentul");
     }
 
     private void writeToFile(String fileName, String data, Context context, boolean isContent, String currentDate) {

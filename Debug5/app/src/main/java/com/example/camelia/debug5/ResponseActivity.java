@@ -14,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +37,7 @@ public class ResponseActivity extends AppCompatActivity {
     private TCPClient mTcpClient;
     TextView serverResponse;
     TextView clientTv;
+    ArrayList<Double> tempsArray, pressuresArray, humiditiesArray;
 
 
     @Override
@@ -102,11 +102,28 @@ public class ResponseActivity extends AppCompatActivity {
         dt = sdf.format(c.getTime());  // dt is now the new date
         //System.out.println("PRINT 4 --------------");
         //we start calculating the average and standard deviation of tomorrow (day and night separatelly)
+
+        // TEMPERATURE
         double dayTomorrowAverageTemp = 0;
         double nightTomorrowAverageTemp = 0;
 
-        ArrayList<Double> dayTomorrowTemps = new ArrayList<>();
-        ArrayList<Double> nightTomorrowTemps = new ArrayList<>();
+        ArrayList<Double> dayTomorrowTemps = new ArrayList<Double>();
+        ArrayList<Double> nightTomorrowTemps = new ArrayList<Double>();
+
+        // PRESSURE
+        double dayTomorrowAveragePressure = 0;
+        double nightTomorrowAveragePressure = 0;
+
+        ArrayList<Double> dayTomorrowPressures = new ArrayList<Double>();
+        ArrayList<Double> nightTomorrowPressures = new ArrayList<Double>();
+
+        // HUMIDITY
+        int dayTomorrowAverageHumidity = 0;
+        int nightTomorrowAverageHumidity = 0;
+
+        ArrayList<Double> dayTomorrowHumidities = new ArrayList<Double>();
+        ArrayList<Double> nightTomorrowHumidities = new ArrayList<Double>();
+
 
         //System.out.println("PRINT 5 --------------");
         int nrOfHoursDay = 0;
@@ -129,25 +146,44 @@ public class ResponseActivity extends AppCompatActivity {
                     int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
                     JSONObject main = null;
                     Double t = 25.;
+                    Double pressure = 1020.;
+                    Double humid = 50.;
                     try {
                         main = arr.getJSONObject(i).getJSONObject("main");
                         t = main.getDouble("temp");
+                        pressure = main.getDouble("pressure");
+                        humid = main.getInt("humidity") * 1.; // convert it from int to double
 
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                     if (hour <= 8) {
                         ++nrOfHoursNight;
+                        // TEMPERATURE
                         nightTomorrowAverageTemp += t;
                         nightTomorrowTemps.add(t);
-                        //System.out.println("ORA night: " + hour);
 
+                        //PRESSURE
+                        nightTomorrowAveragePressure += pressure;
+                        nightTomorrowPressures.add(pressure);
+
+                        // HUMIDITY
+                        nightTomorrowAverageHumidity += humid;
+                        nightTomorrowHumidities.add(humid);
                     }
                     else {
                         ++nrOfHoursDay;
+                        // TEMPERATURE
                         dayTomorrowAverageTemp += t;
                         dayTomorrowTemps.add(t);
-                        //System.out.println("ORA day: " + hour);
+
+                        // PRESSURE
+                        dayTomorrowAveragePressure += pressure;
+                        dayTomorrowPressures.add(pressure);
+
+                        // HUMIDITY
+                        dayTomorrowAverageHumidity += humid;
+                        dayTomorrowHumidities.add(humid);
                     }
                 }
             }
@@ -155,29 +191,45 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
 
+        // TEMPERATURE
         dayTomorrowAverageTemp = dayTomorrowAverageTemp - 273.15; //celsius
         nightTomorrowAverageTemp = nightTomorrowAverageTemp - 273.15; //celsius
 
-        //System.out.println("PRINT 7 --------------");
         dayTomorrowAverageTemp = dayTomorrowAverageTemp / nrOfHoursDay; // kelvin
         nightTomorrowAverageTemp = nightTomorrowAverageTemp / nrOfHoursNight; // kelvin
-        //System.out.println("PRINT 8 --------------");
 
-        double v = getVariance(dayTomorrowAverageTemp, dayTomorrowTemps);
-        //System.out.println("PRINT 8v --------------");
-        double dayTomorrowStdDev = getStdDev(v);
+        double dayTomorrowStdDevTemp = getStdDev(getVariance(dayTomorrowAverageTemp, dayTomorrowTemps));
+        double nightTomorrowStdDevTemp = getStdDev(getVariance(nightTomorrowAverageTemp, nightTomorrowTemps));
 
+        // PRESSURE
+        dayTomorrowAveragePressure = dayTomorrowAveragePressure / nrOfHoursDay;
+        nightTomorrowAveragePressure = nightTomorrowAveragePressure / nrOfHoursNight;
 
-        double nightTomorrowStdDev = getStdDev(getVariance(nightTomorrowAverageTemp, nightTomorrowTemps));
-        //System.out.println("PRINT 9 --------------");
+        double dayTomorrowStdDevPressure = getStdDev(getVariance(dayTomorrowAveragePressure, dayTomorrowPressures));
+        double nightTomorrowStdDevPressure = getStdDev(getVariance(nightTomorrowAveragePressure, nightTomorrowPressures));
+
+        // HUMIDITY
+        dayTomorrowAverageHumidity = dayTomorrowAverageHumidity / nrOfHoursDay;
+        nightTomorrowAverageHumidity = nightTomorrowAverageHumidity / nrOfHoursNight;
+
+        double dayTomorrowStdDevHumidity = getStdDev(getVariance(dayTomorrowAverageHumidity, dayTomorrowHumidities));
+        double nightTomorrowStdDevHumidity = getStdDev(getVariance(nightTomorrowAverageHumidity, nightTomorrowHumidities));
 
         Calendar calendar = GregorianCalendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
 
-        //we calculate average temperature of the current night and day
+        //we calculate averages of the current night and day
+        getArrayLists("dayCurrentWeather.txt");
 
-        ArrayList<Double> nightTemps = getTempArrayList("nightCurrentWeather.txt");
-        ArrayList<Double> dayTemps = getTempArrayList("dayCurrentWeather.txt");
+
+        String fileContent_nightCurrentT = readFromFile("nightCurrentWeather.txt");
+        //System.out.println("FILE CONTENT " + fileContent_nightCurrentT);
+        ArrayList<Double> nightTemps;
+        if (fileContent_nightCurrentT == null || fileContent_nightCurrentT == "") {
+            nightTemps = dayTemps;
+            //System.out.println("FILE CONTENT IS NULL OR VOID");
+        }
+        else nightTemps = getTempArrayList("nightCurrentWeather.txt");
 
         double nightAverageTemp = getAverage(nightTemps);
         double dayAverageTemp = getAverage(dayTemps);
@@ -185,7 +237,7 @@ public class ResponseActivity extends AppCompatActivity {
         double nightStdDev = getStdDev(getVariance(nightAverageTemp, nightTemps));
         double dayStdDev = getStdDev(getVariance(dayAverageTemp, dayTemps));
 
-        writeToFile(getString(R.string.dataFile), " " + day + " " + gb + " " + nightAverageTemp + " " + nightStdDev + " " + dayAverageTemp + " " + dayStdDev + " " + nightTomorrowAverageTemp + " " + nightTomorrowStdDev + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDev, getApplicationContext());
+        writeToFile(getString(R.string.dataFile), " " + day + " " + gb + " " + nightAverageTemp + " " + nightStdDev + " " + dayAverageTemp + " " + dayStdDev + " " + nightTomorrowAverageTemp + " " + nightTomorrowStdDevTemp + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDevTemp, getApplicationContext());
 
         writeToFile(getString(R.string.answeredFile), String.valueOf(true), this);
         // connect to the server
@@ -243,7 +295,7 @@ public class ResponseActivity extends AppCompatActivity {
         System.out.println(message);
         //sends the message to the server
         if (mTcpClient != null) {
-            System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
+            //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
             mTcpClient.sendMessage(message);
         }
     }
@@ -308,18 +360,37 @@ public class ResponseActivity extends AppCompatActivity {
         return ret;
     }
 
-    private ArrayList<Double> getTempArrayList(String filename) {
+    private void getArrayLists(String filename) {
 
-        Pattern p = Pattern.compile("[-+]?[0-9]*\\.[0-9]+");
-        Matcher m = p.matcher(readFromFile(filename));
+        Pattern p1 = Pattern.compile("[-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]*"); // temp + pressure + humid
+        //Matcher m1 = p1.matcher(readFromFile(filename)); //// TODO: 29/07/17 descomenteaza asta
+        Matcher m1 = p1.matcher(readFromFile("1243 342.43 43.3 324.656 1468 .03 53454.345 54.3333 5785 34. 5234253453.4 5345.4 9053 4.56643465 4.234234 76.7455"));
 
-        ArrayList<Double> temps = new ArrayList<>();
+        ArrayList<Double> tempsArray = new ArrayList<>();
+        ArrayList<Double> pressuresArray = new ArrayList<>();
+        ArrayList<Double> humiditiesArray = new ArrayList<>();
+        while (m1.find()) {
+            String[] sarr = m1.group().split("[-+]?[0-9]*\\.[0-9]*", 3);
+            tempsArray.add(Double.valueOf(sarr[0]));
+            pressuresArray.add(Double.valueOf(sarr[1]));
+            humiditiesArray.add(Double.valueOf(sarr[2]));
+        }
 
-        while (m.find())
-            temps.add(Double.valueOf(m.group()));
-        //System.out.println("PRINT 10(getarrayfun) --------------");
-        return temps;
+        System.out.println("Temperatures");
+        for(int i = 0; i < tempsArray.size(); ++i) {
+            System.out.println(tempsArray.get(i));
+        }
+        System.out.println("Pressures");
+        for(int i = 0; i < pressuresArray.size(); ++i) {
+            System.out.println(pressuresArray.get(i));
+        }
+        System.out.println("Humidities");
+        for(int i = 0; i < humiditiesArray.size(); ++i) {
+            System.out.println(humiditiesArray.get(i));
+        }
     }
+
+
 
     private double getAverage(ArrayList<Double> arr) {
         Double sum = .0;

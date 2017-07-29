@@ -33,14 +33,14 @@ public class TCPClient {
      * @param message text entered by client
      */
     public void sendMessage(String message) {
-        System.out.println("(TCP CLIENT JAVA) SUNTEM IN SEND MESSAGE");
-        System.out.println("MESSAGE:" + message);
+        //System.out.println("(TCP CLIENT JAVA) SUNTEM IN SEND MESSAGE");
+        //System.out.println("MESSAGE:" + message);
         if (out != null && !out.checkError()) {
-            System.out.println("OUT IS NOT NULL");
+            //System.out.println("OUT IS NOT NULL");
             out.println(message);
-            System.out.println("WE PRINTED THE MESSAGE");
+            //System.out.println("WE PRINTED THE MESSAGE");
             out.flush();
-            System.out.println("WE FLUSHED");
+            //System.out.println("WE FLUSHED");
         }
     }
 

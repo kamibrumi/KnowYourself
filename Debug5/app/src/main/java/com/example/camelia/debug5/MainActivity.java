@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         int unixCurrentTime = (int) (System.currentTimeMillis() / 1000L);
         int unixStartTime = unixCurrentTime - 12*60*60;
-        System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
-        System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
+        //System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
+        //System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
 
         button_great.setVisibility(View.GONE);
         button_naspa.setVisibility(View.GONE);
@@ -65,9 +65,9 @@ public class MainActivity extends AppCompatActivity {
         PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
                 (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         try {
-            System.out.println("WEATHER PENDING INTENT TO SEND");
+            //System.out.println("WEATHER PENDING INTENT TO SEND");
             weatherPendingIntent.send(this, 0, weatherIntent);
-            System.out.println("WEATHER PENDING INTENT SENT");
+            //System.out.println("WEATHER PENDING INTENT SENT");
         } catch (PendingIntent.CanceledException e) {
             e.printStackTrace();
         }
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (answeredContent == null) answered = false;
             answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
-            System.out.println("ANSWERED VALUE: " + String.valueOf(answered));
+            //System.out.println("ANSWERED VALUE: " + String.valueOf(answered));
             if (!answered) {
 
                 //WE LAUNCH THE NOTIFICATION
@@ -191,16 +191,16 @@ public class MainActivity extends AppCompatActivity {
     public void sendMessage(View view) throws IOException {
         if (!answered) {
             Button button = (Button) view;
-            System.out.println("1111111111111111111111");
+            //System.out.println("1111111111111111111111");
             String howWasYourDay = button.getText().toString();
-            System.out.println("22222222222222222222222222");
+            //System.out.println("22222222222222222222222222");
 
-            System.out.println("33333333333333333");
+            //System.out.println("33333333333333333");
             //we start the response activity
             Intent intent = new Intent(this, ResponseActivity.class);
-            System.out.println("444444444444444444444444444444444");
+            //System.out.println("444444444444444444444444444444444");
             intent.putExtra("how", howWasYourDay);
-            System.out.println("55555555555555555555555");
+            //System.out.println("55555555555555555555555");
             startActivity(intent);
 
 

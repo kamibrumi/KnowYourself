@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.camelia.debug5.MainActivity">
+    tools:context="com.example.camelia.debug5.MainActivity"
+    android:padding="15dp">
 
     <TextView
         android:layout_width="wrap_content"
