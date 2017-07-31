@@ -33,14 +33,9 @@ public class TCPClient {
      * @param message text entered by client
      */
     public void sendMessage(String message) {
-        System.out.println("(TCP CLIENT JAVA) SUNTEM IN SEND MESSAGE");
-        System.out.println("MESSAGE:" + message);
         if (out != null && !out.checkError()) {
-            System.out.println("OUT IS NOT NULL");
             out.println(message);
-            System.out.println("WE PRINTED THE MESSAGE");
             out.flush();
-            System.out.println("WE FLUSHED");
         }
     }
 
@@ -58,16 +53,15 @@ public class TCPClient {
             InetAddress serverAddr = InetAddress.getByName(SERVERIP);
 
             Log.e("TCP Client", "C: Connecting...");
-            System.out.println("WE SENT LOG TO SERVER CONNECTING");
+            //System.out.println("WE SENT LOG TO SERVER CONNECTING");
             //create a socket to make the connection with the server
             Socket socket = new Socket(serverAddr, SERVERPORT);
-            System.out.println("WE CREATED THE SOCKET");
 
             try {
 
                 //send the message to the server
                 out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-                System.out.println("WE MADE THE PRINT WRITER");
+                //System.out.println("WE MADE THE PRINT WRITER");
                 Log.e("TCP Client", "C: Sent.");
 
                 Log.e("TCP Client", "C: Done.");
@@ -97,7 +91,7 @@ public class TCPClient {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
                 socket.close();
-                System.out.println("WE CLOSED THE SOCKET");
+                //System.out.println("WE CLOSED THE SOCKET");
             }
 
         } catch (Exception e) {

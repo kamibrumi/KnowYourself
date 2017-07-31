@@ -15,5 +15,15 @@
         android:layout_height="wrap_content"
         android:id="@+id/clientMessage"/>
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="Send data"
+        android:onClick="sendMessageToServer"
+        android:background="#FCDEBE"/>
+
 
 </RelativeLayout>

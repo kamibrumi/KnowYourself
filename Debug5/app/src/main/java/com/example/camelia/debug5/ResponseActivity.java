@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -405,7 +406,7 @@ public class ResponseActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        sendMessageToServer();
+        //sendMessageToServer();
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
@@ -419,7 +420,7 @@ public class ResponseActivity extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    public void sendMessageToServer() {
+    public void sendMessageToServer(View v) {
         String message = readFromFile(getString(R.string.dataFile));
         System.out.println(message);
         //sends the message to the server
@@ -433,17 +434,14 @@ public class ResponseActivity extends AppCompatActivity {
 
         @Override
         protected TCPClient doInBackground(String... message) {
-            System.out.println("111111111111111111111111111");
 
             //we create a TCPClient object and
             mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
                 @Override
                 //here the messageReceived method is implemented
                 public void messageReceived(String message) {
-                    System.out.println("22222222222222222222222222");
                     //this method calls the onProgressUpdate
                     publishProgress(message);
-                    System.out.println("33333333333333333333333333");
                 }
             });
             mTcpClient.run();
