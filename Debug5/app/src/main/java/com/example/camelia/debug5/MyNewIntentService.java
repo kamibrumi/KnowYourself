@@ -26,7 +26,7 @@ public class MyNewIntentService extends IntentService {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setAutoCancel(true);
-        builder.setContentTitle("Basic Notification");
+        builder.setContentTitle("KY");
         builder.setContentText("Cum ti-a fost ziulica?!");
         builder.setSmallIcon(R.mipmap.ic_launcher);
 

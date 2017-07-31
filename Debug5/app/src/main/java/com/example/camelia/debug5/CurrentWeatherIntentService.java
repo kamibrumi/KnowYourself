@@ -20,7 +20,8 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.ExecutionException;
 
 public class CurrentWeatherIntentService extends IntentService{
-    private static final String URL = "http://api.openweathermap.org/data/2.5/weather?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+    //private static final String URL = "http://api.openweathermap.org/data/2.5/weather?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+    private static final String URL = "http://api.openweathermap.org/data/2.5/weather?q=Amposta,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
     int dayOfMonth, month, minute, hour, startHour;
 
     public CurrentWeatherIntentService() {
@@ -57,11 +58,16 @@ public class CurrentWeatherIntentService extends IntentService{
         Double currentTemp = 25.;
         Double pressure = 1020.;
         Double humid = 50.;
+        Double clouds = 50.;
+        Double wind = 5.;
         try {
             main = obj.getJSONObject("main");
             currentTemp = main.getDouble("temp");
             pressure = main.getDouble("pressure");
             humid = main.getInt("humidity") * 1.; // convert it from int to double
+            clouds = obj.getJSONObject("clouds").getInt("all") * 1.;
+            wind = obj.getJSONObject("wind").getDouble("speed");
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -80,14 +86,19 @@ public class CurrentWeatherIntentService extends IntentService{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (fileContent == null) writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid), this, false, ""); //we converted kelvin to celsius
+        // TODO: 31/07/17 daca modifici datele de la writeFile de la if, modificale si de la else!!!!!!!!!!!!!! 
+        if (fileContent == null) writeToFile(fileName, " " + currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind), this, false, ""); //we converted kelvin to celsius
         else {
             //we'll obtain just the first word of the string because we want to avoid the case that a temperature contains the currentDateId. this wold leave to wrong results.
             String arr[] = fileContent.split(" ", 2);
             String currentDate = arr[0];
-            writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp), this, true, currentDate); //we converted kelvin to celsius
+            writeToFile(fileName, " " + currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind), this, true, currentDate); //we converted kelvin to celsius
         }
-        //System.out.println("pusca?");
+        try {
+            System.out.println("fisierul de current weather din intent: " + readFromFile(fileName, this));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //System.out.println("s-a terminat intentul");
     }
 
@@ -98,7 +109,6 @@ public class CurrentWeatherIntentService extends IntentService{
             if (!isContent || !currentDate.contains(currentDateId)) {
                 outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
             }
-
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }

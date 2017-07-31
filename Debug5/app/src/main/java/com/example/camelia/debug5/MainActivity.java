@@ -2,6 +2,7 @@ package com.example.camelia.debug5;
 
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -83,6 +84,9 @@ public class MainActivity extends AppCompatActivity {
         raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
         if (hour < startHour) {
             writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
+            //we cancel the notification
+            NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+            manager.cancel(123);
         } else {
             String answeredContent = null;
             try {
