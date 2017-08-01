@@ -14,7 +14,19 @@ public class TCPServerSend extends Thread {
     private OnMessageReceived messageListener;
 
     public static void main(String[] args) {
+	//we start the server
 
+        TCPServerSend mServer = new TCPServerSend(new TCPServerSend.OnMessageReceived() {
+                    @Override
+                    //this method declared in the interface from TCPServer class is implemented here
+                    //this method is actually a callback method, because it will run every time when it will be called from
+                    //TCPServer class (at while)
+                    public void messageReceived(String message) {}});
+        mServer.start();
+		
+	// send the message to the client
+	System.out.println("Trimitem la client mesajul");
+      	mServer.sendMessage(args[args.length - 1]); //el porcentaje de good
         
 
     }
@@ -34,6 +46,7 @@ public class TCPServerSend extends Thread {
     public void sendMessage(String message){
         if (mOut != null && !mOut.checkError()) {
             mOut.println(message);
+	    System.out.println(message);
             mOut.flush();
         }
     }

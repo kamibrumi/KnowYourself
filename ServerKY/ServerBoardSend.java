@@ -18,7 +18,7 @@ public class ServerBoardSend {
 	
 	//we start the server
 
-        TCPServer mServer = new TCPServer(new TCPServer.OnMessageReceived() {
+        TCPServerSend mServer = new TCPServerSend(new TCPServerSend.OnMessageReceived() {
                     @Override
                     //this method declared in the interface from TCPServer class is implemented here
                     //this method is actually a callback method, because it will run every time when it will be called from
@@ -27,6 +27,7 @@ public class ServerBoardSend {
                 mServer.start();
 		
 		// send the message to the client
+		System.out.println("Trimitem la client mesajul");
       		mServer.sendMessage(args[args.length - 1]); //el porcentaje de good
     }
 }

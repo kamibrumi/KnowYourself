@@ -1,4 +1,4 @@
-package com.example.camelia.debug5;
+package com.example.camelia.debug6;
 
 import android.util.Log;
 
@@ -48,7 +48,6 @@ public class TCPClient {
         mRun = true;
 
         try {
-            System.out.println("RUN TRY");
             //here you must put your computer's IP address.
             InetAddress serverAddr = InetAddress.getByName(SERVERIP);
 
@@ -58,13 +57,13 @@ public class TCPClient {
             Socket socket = new Socket(serverAddr, SERVERPORT);
 
             try {
-                /*
+
                 //send the message to the server
                 out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
                 //System.out.println("WE MADE THE PRINT WRITER");
                 Log.e("TCP Client", "C: Sent.");
 
-                Log.e("TCP Client", "C: Done."); */
+                Log.e("TCP Client", "C: Done.");
 
                 //receive the message which the server sends back
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));

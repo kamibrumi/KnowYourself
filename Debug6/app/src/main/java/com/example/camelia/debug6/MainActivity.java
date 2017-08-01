@@ -1,4 +1,4 @@
-package com.example.camelia.debug5;
+package com.example.camelia.debug6;
 
 
 import android.app.AlarmManager;
@@ -10,15 +10,16 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,32 +31,28 @@ import java.util.GregorianCalendar;
 public class MainActivity extends AppCompatActivity {
 
     TextView raspuns;
-    Button button_great;
-    Button button_naspa;
-    TextView question;
+    Button commitB;
     TextView debug; //TODO: elimina-l cand termini cu el
     Boolean answered;
     int startHour, hour, minute;
     private TCPClient mTcpClient;
+    ProgressBar pB;
+    LinearLayout progressTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         raspuns = (TextView) findViewById(R.id.raspuns);
-        button_great = (Button) findViewById(R.id.good);
-        button_naspa = (Button) findViewById(R.id.bad);
-        question = (TextView) findViewById(R.id.intrebare);
-        debug = (TextView) findViewById(R.id.debug);
+        commitB = (Button) findViewById(R.id.commit);
+        //debug = (TextView) findViewById(R.id.debug);
+        pB = (ProgressBar) findViewById(R.id.progressBar);
 
-        int unixCurrentTime = (int) (System.currentTimeMillis() / 1000L);
-        int unixStartTime = unixCurrentTime - 12*60*60;
+
+        //int unixCurrentTime = (int) (System.currentTimeMillis() / 1000L);
+        //int unixStartTime = unixCurrentTime - 12*60*60;
         //System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
         //System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
-
-        button_great.setVisibility(View.GONE);
-        button_naspa.setVisibility(View.GONE);
-        question.setVisibility(View.GONE);
 
     }
 
@@ -90,22 +87,21 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
+        String answeredContent = null;
+        try {
+            answeredContent = readFromFile(getString(R.string.answeredFile), this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (answeredContent == null) answered = false;
+        else answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
+
         if (hour < startHour) {
             writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
             //we cancel the notification
             NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
             manager.cancel(123);
         } else {
-            String answeredContent = null;
-            try {
-                answeredContent = readFromFile(getString(R.string.answeredFile), this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (answeredContent == null) answered = false;
-            answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
-            //System.out.println("ANSWERED VALUE: " + String.valueOf(answered));
             if (!answered) {
 
                 //WE LAUNCH THE NOTIFICATION
@@ -115,23 +111,8 @@ public class MainActivity extends AppCompatActivity {
                 AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
                 alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
                         1000 * 24 * 60 * 60, pendingIntent);
-
-                button_great.setVisibility(View.VISIBLE);
-                button_naspa.setVisibility(View.VISIBLE);
-                question.setVisibility(View.VISIBLE);
-                raspuns.setText("");
             }
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        raspuns.setText("Va multumim de raspuns, butoanele au sa ramana inactive pana la " + startHour +"h din ziua urmatoare.");
-        button_great.setVisibility(View.GONE);
-        button_naspa.setVisibility(View.GONE);
-        question.setVisibility(View.GONE);
-
     }
 
     @Override
@@ -142,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    public void commit(View view) {
+    public void commit1(View view) { //trebuie sa facem conexiunea cu serverul ca sa primim raspunsul de la R
         // connect to the server
         new connectTask().execute("");
         System.out.println("SE EXECUTA CONNECTTASK");
@@ -241,24 +222,37 @@ public class MainActivity extends AppCompatActivity {
         return ret;
     }
 
-    public void sendMessage(View view) throws IOException {
+    public void commit(View view) {
         if (!answered) {
-            Button button = (Button) view;
-            //System.out.println("1111111111111111111111");
-            String howWasYourDay = button.getText().toString();
-            //System.out.println("22222222222222222222222222");
+            Calendar calendar = GregorianCalendar.getInstance();
+            hour = calendar.get(Calendar.HOUR_OF_DAY);
 
-            //System.out.println("33333333333333333");
-            //we start the response activity
-            Intent intent = new Intent(this, ResponseActivity.class);
-            //System.out.println("444444444444444444444444444444444");
-            intent.putExtra("how", howWasYourDay);
-            //System.out.println("55555555555555555555555");
-            startActivity(intent);
-
-
+            if (isNetworkAvailable()) {
+                if (hour >= startHour) {
+                    int howWasYourDay = pB.getProgress();
+                    Intent intent = new Intent(this, ResponseActivity.class);
+                    intent.putExtra("how", howWasYourDay);
+                    startActivity(intent);
+                } else {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Commit available at " + startHour + "h", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            } else {
+                Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        } else {
+            Toast toast = Toast.makeText(getApplicationContext(), "Answer committed today!", Toast.LENGTH_SHORT);
+            toast.show();
         }
+    }
 
+    public void incrementProgressBar (View view) {
+        pB.incrementProgressBy(5);
+    }
+
+    public void decrementProgressBar (View view) {
+        pB.incrementProgressBy(-5);
     }
 
     private boolean isNetworkAvailable() {
