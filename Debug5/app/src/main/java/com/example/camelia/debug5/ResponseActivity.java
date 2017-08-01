@@ -339,7 +339,7 @@ public class ResponseActivity extends AppCompatActivity {
                 nightAverageWind = getAverage(nightWindArray);
                 nightStdDevWind = getStdDev(getVariance(nightAverageWind, nightWindArray));
 
-                writeToFile(getString(R.string.dataFile), " " + day + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
+                writeToFile(getString(R.string.dataFile), day + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
                         + " " + nightAveragePressure + " " + nightStdDevPressure
                         + " " + nightAverageHumidity + " " + nightStdDevHumidity
                         + " " + nightAverageClouds + " " + nightStdDevClouds
@@ -358,7 +358,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + dayTomorrowAveragePressure + " " + dayTomorrowStdDevPressure
                         + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1.
                         + " " + dayTomorrowAverageClouds + " " + dayTomorrowStdDevClouds
-                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind, getApplicationContext());
+                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final", getApplicationContext());
             }
         });
         thread.start();
@@ -414,10 +414,11 @@ public class ResponseActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent startMain = new Intent(Intent.ACTION_MAIN);
+        /*Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(startMain);
+        startActivity(startMain); */
+        onDestroy(); // TODO: 1/08/17 daca nu functioneaza programul sa descomentezi chestile dinainte
     }
 
     public void sendMessageToServer(View v) {

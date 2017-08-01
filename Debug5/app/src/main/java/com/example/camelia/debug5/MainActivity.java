@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     TextView debug; //TODO: elimina-l cand termini cu el
     Boolean answered;
     int startHour, hour, minute;
+    private TCPClient mTcpClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +83,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         startHour = this.getResources().getInteger(R.integer.startHour);
+        System.out.println("ORA DIN MOMENTUL ACTUAL: " + hour);
+        try {
+            System.out.println("BOOLEANUL: " + readFromFile(getString(R.string.answeredFile), this));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         raspuns.setText("Asteptam raspunsul dumneavoastra la orele " + startHour + ".");
         if (hour < startHour) {
             writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
@@ -132,6 +141,44 @@ public class MainActivity extends AppCompatActivity {
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(startMain);
     }
+
+    public void commit(View view) {
+        // connect to the server
+        new connectTask().execute("");
+        System.out.println("SE EXECUTA CONNECTTASK");
+
+    }
+
+    public class connectTask extends AsyncTask<String,String,TCPClient> {
+
+        @Override
+        protected TCPClient doInBackground(String... message) {
+
+            //we create a TCPClient object and
+            mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
+                @Override
+                //here the messageReceived method is implemented
+                public void messageReceived(String message) {
+                    //this method calls the onProgressUpdate
+                    debug.setText(message);
+                    publishProgress(message);
+                }
+            });
+            mTcpClient.run();
+
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            //debug.setText(values[0]);
+            //arrayList.add(values[0]);
+            //we can add the message received from server to a text view
+
+        }
+    }
+
 
     private void writeToFile(String fileName, String data, Context context) {
         try {

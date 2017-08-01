@@ -18,8 +18,8 @@ text(dete.rpart1, use.n = TRUE, cex = 0.75)
 cpPrune <- dete.rpart1$cptable[which.min(dete.rpart1$cptable[,"xerror"]),"CP"] 
 #ACUM AR TREBUI SA PUN CP-UL ASTA AICI?
 dete.rpart2 = prune(dete.rpart1, cp = cpPrune)
-summary(dete.rpart2)
-dete.rpart2
+#summary(dete.rpart2)
+#dete.rpart2
 #plotcp(dete.rpart2)
 #printcp(dete.rpart2)
 #plot(dete.rpart2, uniform = TRUE)
@@ -28,7 +28,7 @@ dete.rpart2
 #predict using decision trees
 
 deteC.df <- dete.df[nrow(dete.df),c("weekDay", "nightTomorrowAverageTemp", "nightTomorrowStdDev", "dayTomorrowAverageTemp", "dayTomorrowStdDev")]
-deteC.df
+#deteC.df
 
 if (deteC.df$weekDay == 7) {
   deteC.df$weekDay = as.factor(1)
@@ -39,12 +39,9 @@ if (deteC.df$weekDay == 7) {
 names(deteC.df) <- c("weekDay", "nightAverageTemp", "nightStdDev", "dayAverageTemp", "dayStdDev")
 deteC.df$weekDay = as.numeric(deteC.df$weekDay)
 result <- predict(dete.rpart2, deteC.df, type = "prob", na.action = na.pass)
-print("Your day will be: ")
-print(result*100)
-cat("Your day will be (1. Bad 2. Good):", result*100)
+cat("Your day will be good with a percentage of", result[1, 2]*100)
+
 #uitate pe pagina asta web:
 #https://stat.ethz.ch/R-manual/R-devel/library/rpart/html/predict.rpart.html
-
-
 
 
