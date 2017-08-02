@@ -7,21 +7,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 public class MainActivity extends Activity
 {
     private TCPClient mTcpClient;
     TextView serverResponse;
     TextView clientTv;
-    String fileName = "data2.txt";
-
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -29,7 +31,7 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        writeToFile("\r\n meh!! \n", this);
+        writeToFile("hey there!", this);
         Button send = (Button)findViewById(R.id.send_button);
         serverResponse = (TextView) findViewById(R.id.serverResponse);
         clientTv = (TextView) findViewById(R.id.clientMessage);
@@ -65,7 +67,7 @@ public class MainActivity extends Activity
                     publishProgress(message);
                 }
             });
-            mTcpClient.run();
+            mTcpClient.run(readFromFile());
 
             return null;
         }
@@ -82,7 +84,7 @@ public class MainActivity extends Activity
     private void writeToFile(String data, Context context) {
         try {
             OutputStreamWriter outputStreamWriter;
-            outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            outputStreamWriter = new OutputStreamWriter(context.openFileOutput("data1.txt", Context.MODE_APPEND));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
@@ -95,7 +97,7 @@ public class MainActivity extends Activity
         String ret = "";
 
         try {
-            InputStream inputStream = this.openFileInput(fileName);
+            InputStream inputStream = this.openFileInput("data1.txt");
 
             if ( inputStream != null ) {
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -104,7 +106,7 @@ public class MainActivity extends Activity
                 StringBuilder stringBuilder = new StringBuilder();
 
                 while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString); //TRIMITE   LINIE CU LINIE!!
+                    stringBuilder.append(receiveString);
                 }
 
                 inputStream.close();

@@ -55,6 +55,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
+
     }
 
     //we get the temperature and we write in the file day + Good/Bad + temperature
@@ -371,6 +372,7 @@ public class ResponseActivity extends AppCompatActivity {
         System.out.println(readFromFile(getString(R.string.dataFile)));
         writeToFile(getString(R.string.answeredFile), String.valueOf(true), this);
         System.out.println(readFromFile(getString(R.string.dataFile)));
+
         // connect to the server
         new connectTask().execute("");
     }
@@ -388,40 +390,8 @@ public class ResponseActivity extends AppCompatActivity {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
-    /*
-    private void writeToFile(String nameOfFile, String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter;
-            if (nameOfFile == getString(R.string.dataFile)) //whe we write into the data file
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(getString(R.string.dataFile), Context.MODE_APPEND));
-            else //when we write into the booleans file
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(nameOfFile, Context.MODE_PRIVATE));
-            outputStreamWriter.write(data + '\n');
-            outputStreamWriter.close();
-        } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    } */
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //sendMessageToServer();
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        /*Intent startMain = new Intent(Intent.ACTION_MAIN);
-        startMain.addCategory(Intent.CATEGORY_HOME);
-        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(startMain); */
-        onDestroy(); // TODO: 1/08/17 daca nu functioneaza programul sa descomentezi chestile dinainte
-    }
-
-    public void sendMessageToServer() {
+/*
+    public void sendMessageToServer(View v) {
         String message = readFromFile(getString(R.string.dataFile));
         System.out.println(message);
         //sends the message to the server
@@ -429,32 +399,23 @@ public class ResponseActivity extends AppCompatActivity {
             //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
             mTcpClient.sendMessage(message);
         }
-    }
+    } */
 
     public class connectTask extends AsyncTask<String,String,TCPClient> {
 
         @Override
         protected TCPClient doInBackground(String... message) {
-            System.out.println("SUNTEM IN DO IN BACKGROUND");
 
             //we create a TCPClient object and
             mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
                 @Override
                 //here the messageReceived method is implemented
                 public void messageReceived(String message) {
-                    System.out.println("SUNTEM IN SEND MESSAGE DIN RESPONSE ACT");
                     //this method calls the onProgressUpdate
                     publishProgress(message);
                 }
             });
-            mTcpClient.run();
-
-
-            String dataFileContent = readFromFile(getString(R.string.dataFile));
-            if (mTcpClient != null) {
-                //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
-                mTcpClient.sendMessage(dataFileContent);
-            }
+            mTcpClient.run(readFromFile(getString(R.string.dataFile)));
 
             return null;
         }

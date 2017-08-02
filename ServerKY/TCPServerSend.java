@@ -12,21 +12,19 @@ public class TCPServerSend extends Thread {
     private boolean running = false;
     private PrintWriter mOut;
     private OnMessageReceived messageListener;
+    static String Ranswer;
 
     public static void main(String[] args) {
+	Ranswer = args[args.length - 1];
 	//we start the server
-
         TCPServerSend mServer = new TCPServerSend(new TCPServerSend.OnMessageReceived() {
                     @Override
                     //this method declared in the interface from TCPServer class is implemented here
                     //this method is actually a callback method, because it will run every time when it will be called from
                     //TCPServer class (at while)
                     public void messageReceived(String message) {}});
-        mServer.start();
-		
-	// send the message to the client
-	System.out.println("Trimitem la client mesajul");
-      	mServer.sendMessage(args[args.length - 1]); //el porcentaje de good
+	       
+	mServer.start();
         
 
     }
@@ -45,9 +43,11 @@ public class TCPServerSend extends Thread {
      */
     public void sendMessage(String message){
         if (mOut != null && !mOut.checkError()) {
+	    System.out.println("mout in not null and it doesn't give error");
             mOut.println(message);
-	    System.out.println(message);
+	    System.out.println("message : " + message);
             mOut.flush();
+	    System.out.println("flushed!");
         }
     }
 
@@ -71,13 +71,14 @@ public class TCPServerSend extends Thread {
 
                 //sends the message to the client
                 mOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-		/*
+		sendMessage(Ranswer);
+		
                 //read the message received from client
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
                 //in this while we wait to receive messages from client (it's an infinite loop)
                 //this while it's like a listener for messages
-                /*while (running) {
+                if (running) {
                     String message = in.readLine();
 
                     if (message != null && messageListener != null) {
@@ -90,7 +91,7 @@ public class TCPServerSend extends Thread {
                 if (message != null && messageListener != null) {
                     //call the method messageReceived from ServerBoard class
                     messageListener.messageReceived(message);
-                } */
+                } 
 
             } catch (Exception e) {
                 System.out.println("S: Error");

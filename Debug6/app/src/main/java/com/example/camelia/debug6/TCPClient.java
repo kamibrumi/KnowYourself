@@ -4,6 +4,9 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -13,7 +16,7 @@ import java.net.Socket;
 public class TCPClient {
 
     private String serverMessage;
-    public static final String SERVERIP = "192.168.1.225"; //your computer IP address
+    public static final String SERVERIP = "192.168.1.35"; //your computer IP address
     public static final int SERVERPORT = 55160;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
@@ -43,7 +46,7 @@ public class TCPClient {
         mRun = false;
     }
 
-    public void run() {
+    public void run(String msg) {
 
         mRun = true;
 
@@ -54,21 +57,23 @@ public class TCPClient {
             Log.e("TCP Client", "C: Connecting...");
             //System.out.println("WE SENT LOG TO SERVER CONNECTING");
             //create a socket to make the connection with the server
+            System.out.println("inainte de crearea socketului");
             Socket socket = new Socket(serverAddr, SERVERPORT);
-
+            System.out.println("dupa crearea socketului");
             try {
 
                 //send the message to the server
                 out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+                System.out.println("dupa crearea printWriterului");
+                if (msg != "" && msg != null) sendMessage(msg);
                 //System.out.println("WE MADE THE PRINT WRITER");
                 Log.e("TCP Client", "C: Sent.");
 
                 Log.e("TCP Client", "C: Done.");
-
                 //receive the message which the server sends back
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                /* TODO AM COMENTAT WHILE LOOP-UL CA SA CITIM DOAR O LINIE DE LA SERVER
+
                 //in this while the client listens for the messages sent by the server
                 while (mRun) {
                     serverMessage = in.readLine();
@@ -79,15 +84,7 @@ public class TCPClient {
                     }
                     serverMessage = null;
 
-                } */
-
-                serverMessage = in.readLine();
-
-                if (serverMessage != null && mMessageListener != null) {
-                    //call the method messageReceived from MyActivity class
-                    mMessageListener.messageReceived(serverMessage);
                 }
-                serverMessage = null;
 
                 Log.e("RESPONSE FROM SERVER", "S: Received Message: '" + serverMessage + "'");
 

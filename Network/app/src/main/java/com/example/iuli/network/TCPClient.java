@@ -8,7 +8,7 @@ import java.net.Socket;
 public class TCPClient {
 
     private String serverMessage;
-    public static final String SERVERIP = "192.168.1.225"; //your computer IP address
+    public static final String SERVERIP = "192.168.1.35"; //your computer IP address
     public static final int SERVERPORT = 55160;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
@@ -27,7 +27,7 @@ public class TCPClient {
      * Sends the message entered by client to the server
      * @param message text entered by client
      */
-    public void sendMessage(String message) {
+    public void sendMessage(String message){
         if (out != null && !out.checkError()) {
             out.println(message);
             out.flush();
@@ -38,7 +38,7 @@ public class TCPClient {
         mRun = false;
     }
 
-    public void run() {
+    public void run(String msg) {
 
         mRun = true;
 
@@ -55,7 +55,7 @@ public class TCPClient {
 
                 //send the message to the server
                 out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-
+                if (msg != "" && msg != null) sendMessage(msg);
                 Log.e("TCP Client", "C: Sent.");
 
                 Log.e("TCP Client", "C: Done.");

@@ -25,29 +25,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
-
-    TextView raspuns;
     Button commitB;
-    TextView debug; //TODO: elimina-l cand termini cu el
     Boolean answered;
     int startHour, hour, minute;
-    private TCPClient mTcpClient;
     ProgressBar pB;
-    LinearLayout progressTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        raspuns = (TextView) findViewById(R.id.raspuns);
         commitB = (Button) findViewById(R.id.commit);
-        //debug = (TextView) findViewById(R.id.debug);
         pB = (ProgressBar) findViewById(R.id.progressBar);
-
 
         //int unixCurrentTime = (int) (System.currentTimeMillis() / 1000L);
         //int unixStartTime = unixCurrentTime - 12*60*60;
@@ -80,12 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         startHour = this.getResources().getInteger(R.integer.startHour);
-        System.out.println("ORA DIN MOMENTUL ACTUAL: " + hour);
-        try {
-            System.out.println("BOOLEANUL: " + readFromFile(getString(R.string.answeredFile), this));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         String answeredContent = null;
         try {
@@ -95,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (answeredContent == null) answered = false;
         else answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
-
+        System.out.println("ANSWERed" + answered);
         if (hour < startHour) {
             writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
             //we cancel the notification
@@ -123,46 +110,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    public void commit1(View view) { //trebuie sa facem conexiunea cu serverul ca sa primim raspunsul de la R
-        // connect to the server
-        new connectTask().execute("");
-        System.out.println("SE EXECUTA CONNECTTASK");
-
-    }
-
-    public class connectTask extends AsyncTask<String,String,TCPClient> {
-
-        @Override
-        protected TCPClient doInBackground(String... message) {
-            System.out.println("SUNTEM IN DOINBACKGROUND");
-            //we create a TCPClient object and
-            mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
-                @Override
-                //here the messageReceived method is implemented
-                public void messageReceived(String message) {
-                    //this method calls the onProgressUpdate
-                    debug.setText(message);
-                    System.out.println("MESAJUL DE LA SERVER:" + message);
-                    publishProgress(message);
-                }
-            });
-            mTcpClient.run();
-            System.out.println("FACEM RUN() LA SERVER");
-
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //debug.setText(values[0]);
-            //arrayList.add(values[0]);
-            //we can add the message received from server to a text view
-
-        }
-    }
-
-
     private void writeToFile(String fileName, String data, Context context) {
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
@@ -174,20 +121,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
-/*
-    private void writeToFile(String fileName, String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter;
-            if (fileName == getString(R.string.dataFile)) outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
-            else outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-            outputStreamWriter.write(data + '\n');
-            outputStreamWriter.close();
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    } */
 
     private String readFromFile(String fileName, Context context) throws IOException {
 
@@ -230,8 +163,9 @@ public class MainActivity extends AppCompatActivity {
             if (isNetworkAvailable()) {
                 if (hour >= startHour) {
                     int howWasYourDay = pB.getProgress();
+                    System.out.println("how was my day------------> " + howWasYourDay);
                     Intent intent = new Intent(this, ResponseActivity.class);
-                    intent.putExtra("how", howWasYourDay);
+                    intent.putExtra("how", String.valueOf(howWasYourDay));
                     startActivity(intent);
                 } else {
                     Toast toast = Toast.makeText(getApplicationContext(), "Commit available at " + startHour + "h", Toast.LENGTH_SHORT);
@@ -244,6 +178,17 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast toast = Toast.makeText(getApplicationContext(), "Answer committed today!", Toast.LENGTH_SHORT);
             toast.show();
+        }
+    }
+
+    public void predict(View v) throws IOException {
+        String dataContent = readFromFile(getString(R.string.dataFile), this);
+        if (dataContent == null) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Working on it! Come back later :-)", Toast.LENGTH_SHORT);
+            toast.show();
+        } else {
+            Intent intent = new Intent(this, PredictionActivity.class);
+            startActivity(intent);
         }
     }
 

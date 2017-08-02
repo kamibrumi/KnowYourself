@@ -19,6 +19,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/clientMessage"/>
 
+
     <!--
     <Button
         android:id="@+id/button"
