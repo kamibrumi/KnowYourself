@@ -12,7 +12,7 @@ public class TCPServerSend extends Thread {
     private boolean running = false;
     private PrintWriter mOut;
     private OnMessageReceived messageListener;
-    static String Ranswer;
+    static  String Ranswer;
 
     public static void main(String[] args) {
 	Ranswer = args[args.length - 1];

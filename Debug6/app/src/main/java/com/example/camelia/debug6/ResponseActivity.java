@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -20,12 +21,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,8 +41,9 @@ public class ResponseActivity extends AppCompatActivity {
     private final static int serverPort = 55160;
     private TCPClient mTcpClient;
     TextView serverResponse;
-    TextView clientTv;
+    TextView loadMessage, dayTv;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
+    ProgressBar loading;
 
 
     @Override
@@ -47,11 +51,11 @@ public class ResponseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_response);
 
-        TextView response = (TextView) findViewById(R.id.response);
-        response.setText("Thanks for your answer. We wait for you next day at " + this.getResources().getInteger(R.integer.startHour) + "h.");
-
         //serverResponse = (TextView) findViewById(R.id.serverResponse); //TODO: cand o sa primim un raspuns de la server o sa folosim textView-ul asta ca sa scriem rezultatul
-        clientTv = (TextView) findViewById(R.id.clientMessage);
+        loadMessage = (TextView) findViewById(R.id.loadMessage);
+        loading = (ProgressBar) findViewById(R.id.loading);
+        dayTv = (TextView) findViewById(R.id.dayTv);
+
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
@@ -359,7 +363,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + dayTomorrowAveragePressure + " " + dayTomorrowStdDevPressure
                         + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1.
                         + " " + dayTomorrowAverageClouds + " " + dayTomorrowStdDevClouds
-                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final", getApplicationContext());
+                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final");
             }
         });
         thread.start();
@@ -368,21 +372,45 @@ public class ResponseActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        System.out.println(readFromFile(getString(R.string.dataFile)));
-        writeToFile(getString(R.string.answeredFile), String.valueOf(true), this);
-        System.out.println(readFromFile(getString(R.string.dataFile)));
+        writeToFile(getString(R.string.answeredFile), String.valueOf(true));
 
         // connect to the server
-        new connectTask().execute("");
+        new connectTask().execute("commit");
+        new java.util.Timer().schedule(
+                new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        mTcpClient.stopClient();
+                        // connect to the server
+                        new connectTask().execute("predict");
+                        System.out.println("PREDICT???");
+                    }
+                },
+                5000
+        );
+        new java.util.Timer().schedule(
+                new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        mTcpClient.stopClient();
+                        // connect to the server
+                        new connectTask().execute("predict");
+                        System.out.println("PREDICT???");
+                    }
+                },
+                10000
+        );
+
+
+        System.out.println("S-A TERMINAT ON RESUME");
     }
 
-    private void writeToFile(String fileName, String data, Context context) {
+    private void writeToFile(String fileName, String data) {
         try {
             OutputStreamWriter outputStreamWriter;
             if (fileName == getString(R.string.dataFile))
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
-            else outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+                outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_APPEND));
+            else outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_PRIVATE));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
@@ -415,7 +443,15 @@ public class ResponseActivity extends AppCompatActivity {
                     publishProgress(message);
                 }
             });
-            mTcpClient.run(readFromFile(getString(R.string.dataFile)));
+            System.out.println("message of do in backGROUND" + message[0]);
+            if (message[0] == "commit") {
+                mTcpClient.run(readFromFile(getString(R.string.dataFile)));
+                System.out.println("AM COMITEJAT");
+            }
+            else {
+                mTcpClient.run("");
+                System.out.println("ACUM PREZICEM");
+            }
 
             return null;
         }
@@ -423,8 +459,19 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            System.out.println("SE EXECUTA CODUL ASTA!!");
-            serverResponse.setText(values[0]);
+            if (values[0] != null) writeToFile(getString(R.string.predictionFile), values[0]);
+            System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
+            boolean answered = Boolean.valueOf(readFromFile(getString(R.string.answeredFile)));
+            if (answered) dayTv.setText("Tomorrow will be");
+            else dayTv.setText("The current day may be");
+
+            System.out.println("DESPUES DE SET TEXT");
+            dayTv.setVisibility(View.VISIBLE);
+            loading.setVisibility(View.GONE);
+            Double percentage = Double.parseDouble(readFromFile(getString(R.string.predictionFile)));
+            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+            loadMessage.setTextSize(40);
+            //serverResponse.setText(values[0]);
             //arrayList.add(values[0]);
             //we can add the message received from server to a text view
 

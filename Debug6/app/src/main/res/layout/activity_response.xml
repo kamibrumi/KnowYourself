@@ -9,15 +9,29 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/response"
-        android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:textAllCaps="true"/>
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/loadMessage"
+        android:id="@+id/dayTv"
+        android:text="Tomorrow will be"
+        android:visibility="gone"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/clientMessage"/>
+        android:textSize="17dp"
+        android:id="@+id/loadMessage"
+        android:text="Predincting..."
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"/>
+
+    <ProgressBar
+        android:id="@+id/loading"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"/>
 
 
     <!--
