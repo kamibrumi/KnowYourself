@@ -393,12 +393,9 @@ public class ResponseActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         mTcpClient.stopClient();
-                        // connect to the server
-                        new connectTask().execute("predict");
-                        System.out.println("PREDICT???");
                     }
                 },
-                10000
+                8000
         );
 
 
@@ -471,6 +468,9 @@ public class ResponseActivity extends AppCompatActivity {
             Double percentage = Double.parseDouble(readFromFile(getString(R.string.predictionFile)));
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
+            System.out.println("STOP CLIENT DIN PROGRESS UPDATE");
+            mTcpClient.stopClient();
+
             //serverResponse.setText(values[0]);
             //arrayList.add(values[0]);
             //we can add the message received from server to a text view

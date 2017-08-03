@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
         return ret;
     }
-
+ /*
     public void commit(View view) {
         if (!answered) {
             Calendar calendar = GregorianCalendar.getInstance();
@@ -177,6 +177,19 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             Toast toast = Toast.makeText(getApplicationContext(), "Answer committed today!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    } */
+
+    public void commit(View view) {
+        if (isNetworkAvailable()) {
+            int howWasYourDay = pB.getProgress();
+            System.out.println("how was my day------------> " + howWasYourDay);
+            Intent intent = new Intent(this, ResponseActivity.class);
+            intent.putExtra("how", String.valueOf(howWasYourDay));
+            startActivity(intent);
+        } else {
+            Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
             toast.show();
         }
     }

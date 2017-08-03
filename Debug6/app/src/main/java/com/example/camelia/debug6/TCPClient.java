@@ -44,6 +44,7 @@ public class TCPClient {
 
     public void stopClient(){
         mRun = false;
+        System.out.println("WE STOPPED THE CLIENT FROM TCPCLIENT");
     }
 
     public void run(String msg) {
@@ -83,8 +84,9 @@ public class TCPClient {
                         mMessageListener.messageReceived(serverMessage);
                     }
                     serverMessage = null;
-
+                    System.out.println(mRun);
                 }
+                System.out.println("THE MRUN VALUE IS " + mRun);
 
                 Log.e("RESPONSE FROM SERVER", "S: Received Message: '" + serverMessage + "'");
 
@@ -95,9 +97,10 @@ public class TCPClient {
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
+                sendMessage("quit");
+                System.out.println("AM TRIMIS MESAJUL QUIT");
                 socket.close();
-                //System.out.println("WE CLOSED THE SOCKET");
-
+                System.out.println("WE CLOSED THE SOCKET");
             }
 
         } catch (Exception e) {

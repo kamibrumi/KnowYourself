@@ -22,7 +22,9 @@ public class TCPServerSend extends Thread {
                     //this method declared in the interface from TCPServer class is implemented here
                     //this method is actually a callback method, because it will run every time when it will be called from
                     //TCPServer class (at while)
-                    public void messageReceived(String message) {}});
+                    public void messageReceived(String message) {
+		    }
+	});
 	       
 	mServer.start();
         
@@ -72,26 +74,36 @@ public class TCPServerSend extends Thread {
                 //sends the message to the client
                 mOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
 		sendMessage(Ranswer);
-		
                 //read the message received from client
                 BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
                 //in this while we wait to receive messages from client (it's an infinite loop)
                 //this while it's like a listener for messages
-                if (running) {
+		int count = 0;
+		/*
+                while (running) {
+		    System.out.println(count);
+		    ++count;
+			
                     String message = in.readLine();
 
                     if (message != null && messageListener != null) {
+			System.out.println("suntem in if");
                         //call the method messageReceived from ServerBoard class
                         messageListener.messageReceived(message);
+			System.out.println("dupa messge receiver");
                     }
+		    
                 } 
 		String message = in.readLine();
+		System.out.println("dupa in.readline()");
 
                 if (message != null && messageListener != null) {
                     //call the method messageReceived from ServerBoard class
                     messageListener.messageReceived(message);
-                } 
+		    System.out.println("message not null and message listener not null");
+                }
+		System.out.println("we finished the run"); */
 
             } catch (Exception e) {
                 System.out.println("S: Error");
