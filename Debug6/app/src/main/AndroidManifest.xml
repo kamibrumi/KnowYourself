@@ -39,7 +39,6 @@
             android:exported="false" />
 
         <activity android:name=".ResponseActivity" />
-        <activity android:name=".PredictionActivity"></activity>
     </application>
 
 </manifest>

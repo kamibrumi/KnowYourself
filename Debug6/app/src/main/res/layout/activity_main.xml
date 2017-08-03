@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/progressTracker"
         android:layout_centerHorizontal="true"
-        android:text="HOW DO YOU FEEL RIGHT NOW?"
+        android:text="HOW DO YOU FEEL?"
         android:id="@+id/feel"/>
 
     <LinearLayout
@@ -77,18 +77,5 @@
         android:layout_alignLeft="@id/feel"
         android:visibility="visible"
         android:onClick="commit"/>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Predict"
-        android:id="@+id/predict"
-        android:layout_below="@id/commit"
-        android:layout_centerHorizontal="true"
-        android:layout_alignEnd="@id/feel"
-        android:layout_alignStart="@id/feel"
-        android:layout_alignRight="@id/feel"
-        android:layout_alignLeft="@id/feel"
-        android:visibility="visible"
-        android:onClick="predict"/>
 
 </RelativeLayout>

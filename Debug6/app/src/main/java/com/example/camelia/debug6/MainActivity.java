@@ -181,17 +181,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void predict(View v) throws IOException {
-        String dataContent = readFromFile(getString(R.string.dataFile), this);
-        if (dataContent == null) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Working on it! Come back later :-)", Toast.LENGTH_SHORT);
-            toast.show();
-        } else {
-            Intent intent = new Intent(this, PredictionActivity.class);
-            startActivity(intent);
-        }
-    }
-
     public void incrementProgressBar (View view) {
         pB.incrementProgressBy(5);
     }

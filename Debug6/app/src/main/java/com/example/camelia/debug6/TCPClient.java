@@ -97,6 +97,7 @@ public class TCPClient {
                 // after it is closed, which means a new socket instance has to be created.
                 socket.close();
                 //System.out.println("WE CLOSED THE SOCKET");
+
             }
 
         } catch (Exception e) {
