@@ -10,9 +10,12 @@ public class WeatherReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-
+        System.out.println("suntem in receiver");
+        //double[] coordinates = intent.getDoubleArrayExtra("coordinates");
+        System.out.println("am luat coordonatele");
         Intent intent2 = new Intent(context, CurrentWeatherIntentService.class);
+        //intent2.putExtra("coordinates", coordinates);
+        System.out.println("inainte sa incepem serviciul");
         context.startService(intent2);
     }
 }

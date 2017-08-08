@@ -1,15 +1,24 @@
 package com.example.camelia.debug6;
 
 
+import android.Manifest;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -32,8 +41,14 @@ import java.util.GregorianCalendar;
 public class MainActivity extends AppCompatActivity {
     Button commitB;
     Boolean answered;
-    int startHour, hour, minute;
+    int currentDay, answerDay;
     ProgressBar pB;
+    boolean isNetworkEnabled;
+    LocationManager locationManager;
+    Location location;
+    Double latitude, longitude;
+    String idll;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,59 +61,18 @@ public class MainActivity extends AppCompatActivity {
         //int unixStartTime = unixCurrentTime - 12*60*60;
         //System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
         //System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
-
     }
 
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-
-        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-        Intent weatherIntent = new Intent(this,WeatherReceiver.class);
-        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         try {
-            //System.out.println("WEATHER PENDING INTENT TO SEND");
-            weatherPendingIntent.send(this, 0, weatherIntent);
-            //System.out.println("WEATHER PENDING INTENT SENT");
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
-        AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis(),
-                1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h)
-
-        Calendar calendar = GregorianCalendar.getInstance();
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-
-        startHour = this.getResources().getInteger(R.integer.startHour);
-
-        String answeredContent = null;
-        try {
-            answeredContent = readFromFile(getString(R.string.answeredFile), this);
+            idll = readFromFile(getString(R.string.idLatLonFile), this);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (answeredContent == null) answered = false;
-        else answered = Boolean.valueOf(answeredContent); //when the user opens the aplication for the first time after the star hour --> answer == null
-        System.out.println("ANSWERed" + answered);
-        if (hour < startHour) {
-            writeToFile(getString(R.string.answeredFile), String.valueOf(false), this);
-            //we cancel the notification
-            NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-            manager.cancel(123);
-        } else {
-            if (!answered) {
-
-                //WE LAUNCH THE NOTIFICATION
-                Intent notifyIntent = new Intent(this,MyReceiver.class);
-                PendingIntent pendingIntent = PendingIntent.getBroadcast
-                        (this, 1, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 1000 * startHour * 60 * 60,
-                        1000 * 24 * 60 * 60, pendingIntent);
-            }
+        if (idll == "" || idll == null) {
+            isLocation();
         }
     }
 
@@ -182,12 +156,40 @@ public class MainActivity extends AppCompatActivity {
     } */
 
     public void commit(View view) {
+
         if (isNetworkAvailable()) {
-            int howWasYourDay = pB.getProgress();
-            System.out.println("how was my day------------> " + howWasYourDay);
-            Intent intent = new Intent(this, ResponseActivity.class);
-            intent.putExtra("how", String.valueOf(howWasYourDay));
-            startActivity(intent);
+            // TODO: 7/08/17 do something
+            if (isLocation()) {
+                writeToFile(getString(R.string.answeredFile), "false", this);
+                int howWasYourDay = pB.getProgress();
+                System.out.println("how was my day------------> " + howWasYourDay);
+                Intent intent = new Intent(this, ResponseActivity.class);
+                intent.putExtra("how", String.valueOf(howWasYourDay));
+                startActivity(intent);
+            } else {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                dialog.setMessage("Enable your location for a while, pls.");
+                dialog.setTitle("Location Needed");
+                dialog.setCancelable(false);
+                dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(myIntent);
+                        //get gps
+                    }
+                });
+                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+
+                    }
+                });
+                dialog.show();
+            }
         } else {
             Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
             toast.show();
@@ -207,5 +209,74 @@ public class MainActivity extends AppCompatActivity {
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    public boolean isLocation(){
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        //boolean gps_enabled = false;
+        //boolean network_enabled = false;
+
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        // Register the listener with the Location Manager to receive location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
+            toast.show();
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            //return;
+        }
+
+        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        if (isNetworkEnabled) {
+
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    0,
+                    0, locationListener);
+
+            if (locationManager != null) {
+                location = locationManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+                if (location != null) {
+
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+
+                }
+                writeToFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, getApplicationContext());
+                //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                        (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                        1000 * 2 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
+                System.out.println("se face trimiterea intentului!!!!!!!!!!!!!!");
+                return true;
+            }
+
+        }
+        return false;
     }
 }

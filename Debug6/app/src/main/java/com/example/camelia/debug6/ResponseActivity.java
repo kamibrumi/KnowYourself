@@ -1,15 +1,22 @@
 package com.example.camelia.debug6;
 
+import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,7 +42,7 @@ import java.util.regex.Pattern;
 
 public class ResponseActivity extends AppCompatActivity {
     //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
-    private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Amposta,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+    private String URL;
     String gb;
     private final static String serverIP = "192.168.1.225";
     private final static int serverPort = 55160;
@@ -44,6 +51,13 @@ public class ResponseActivity extends AppCompatActivity {
     TextView loadMessage, dayTv;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
+    boolean isNetworkEnabled = false;
+    Location location;
+    double latitude;
+    double longitude;
+    long cityId;
+    String cityName;
+    boolean answered;
 
 
     @Override
@@ -59,6 +73,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
+        System.out.println("on CReate INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
     }
 
@@ -70,9 +85,99 @@ public class ResponseActivity extends AppCompatActivity {
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(123);
 
+        answered = Boolean.valueOf(readFromFile(getString(R.string.answeredFile)));
+        Calendar calendar = GregorianCalendar.getInstance();
+        System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
+
+        if (answered) {
+
+            dayTv.setText("Tomorrow will be");
+            dayTv.setVisibility(View.VISIBLE);
+            loading.setVisibility(View.GONE);
+            Double percentage = Double.parseDouble(readFromFile(getString(R.string.predictionFile)));
+            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+            loadMessage.setTextSize(40);
+
+        }
+        else {
+            // Acquire a reference to the system Location Manager
+            LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            System.out.println("LOCATION MANAGER DECLARED");
+            // Define a listener that responds to location updates
+            LocationListener locationListener = new LocationListener() {
+                public void onLocationChanged(Location location) {
+                    // Called when a new location is found by the network location provider.
+                    System.out.println("ON LOCATION CHANGED");
+                    writeDataAndPredict();
+                }
+
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+                }
+
+                public void onProviderEnabled(String provider) {
+                }
+
+                public void onProviderDisabled(String provider) {
+                }
+            };
+
+            // Register the listener with the Location Manager to receive location updates
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
+                toast.show();
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                //return;
+            }
+
+            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if (isNetworkEnabled) {
+                System.out.println("LOCATION ENCABLED");
+
+                locationManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER,
+                        0,
+                        0, locationListener);
+
+                if (locationManager != null) {
+                    location = locationManager
+                            .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    System.out.println("LOCATION MANAGER NOT NULL");
+
+                    if (location != null) {
+                        System.out.println("LOCATION NOT NULL");
+
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                    }
+                }
+
+            } else {
+                Toast toast = Toast.makeText(this, "Open your location!", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        }
+    }
+
+
+
+    public void writeDataAndPredict() {
+
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run(){
+                System.out.println("WE WRITE DATA");
+
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                URL = "http://api.openweathermap.org/data/2.5/find?lat=" + latitude + "&lon=" + longitude + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+                //we use the current data link to retrieve the id of the city and use it to calculate the link of the forecast
                 String weatherData = null;
                 try {
                     weatherData = new getURLData().execute(URL).get();
@@ -80,6 +185,25 @@ public class ResponseActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 JSONObject obj = null;
+                try {
+                    obj = new JSONObject(weatherData);
+                    cityId = obj.getJSONArray("list").getJSONObject(0).getLong("id");
+                    cityName = obj.getJSONArray("list").getJSONObject(0).getString("name");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                writeToFile(getString(R.string.idLatLonFile), cityId + " " + latitude + " " + longitude);
+
+                URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+
+                weatherData = null;
+                try {
+                    weatherData = new getURLData().execute(URL).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+                obj = null;
                 try {
                     obj = new JSONObject(weatherData);
                 } catch (JSONException e) {
@@ -92,7 +216,6 @@ public class ResponseActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                //System.out.println("PRINT 3 --------------");
 
                 //we get tomorrow's date
                 Date date = new Date();
@@ -107,9 +230,8 @@ public class ResponseActivity extends AppCompatActivity {
                 }
                 c.add(Calendar.DATE, 1);  // number of days to add
                 dt = sdf.format(c.getTime());  // dt is now the new date
-                //System.out.println("PRINT 4 --------------");
-                //we start calculating the average and standard deviation of tomorrow (day and night separatelly)
 
+                //we start calculating the average and standard deviation of tomorrow (day and night separatelly)
                 // TEMPERATURE
                 double dayTomorrowAverageTemp = 0;
                 double nightTomorrowAverageTemp = 0;
@@ -145,15 +267,12 @@ public class ResponseActivity extends AppCompatActivity {
                 ArrayList<Double> dayTomorrowWind = new ArrayList<Double>();
                 ArrayList<Double> nightTomorrowWind = new ArrayList<Double>();
 
-                //System.out.println("PRINT 5 --------------");
                 int nrOfHoursDay = 0;
                 int nrOfHoursNight = 0;
                 String dt_compare = null;
 
                 for (int i = 0; i < arr.length(); i++) {
-                    //System.out.println("PRINT 6 --------------loop " + i);
                     try {
-
                         dt_compare = arr.getJSONObject(i).getString("dt_txt");
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -344,7 +463,7 @@ public class ResponseActivity extends AppCompatActivity {
                 nightAverageWind = getAverage(nightWindArray);
                 nightStdDevWind = getStdDev(getVariance(nightAverageWind, nightWindArray));
 
-                writeToFile(getString(R.string.dataFile), day + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
+                writeToFile(getString(R.string.dataFile), day + " " + cityName + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
                         + " " + nightAveragePressure + " " + nightStdDevPressure
                         + " " + nightAverageHumidity + " " + nightStdDevHumidity
                         + " " + nightAverageClouds + " " + nightStdDevClouds
@@ -376,6 +495,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         // connect to the server
         new connectTask().execute("commit");
+        System.out.println("FIRST COMMIT");
         new java.util.Timer().schedule(
                 new java.util.TimerTask() {
                     @Override
@@ -397,9 +517,6 @@ public class ResponseActivity extends AppCompatActivity {
                 },
                 8000
         );
-
-
-        System.out.println("S-A TERMINAT ON RESUME");
     }
 
     private void writeToFile(String fileName, String data) {
@@ -458,7 +575,7 @@ public class ResponseActivity extends AppCompatActivity {
             super.onProgressUpdate(values);
             if (values[0] != null) writeToFile(getString(R.string.predictionFile), values[0]);
             System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
-            boolean answered = Boolean.valueOf(readFromFile(getString(R.string.answeredFile)));
+
             if (answered) dayTv.setText("Tomorrow will be");
             else dayTv.setText("The current day may be");
 
@@ -510,22 +627,21 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     private void getArrayLists(String filename) {
-
-        Pattern p1 = Pattern.compile("[-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]* [-+]?[0-9]*\\.[0-9]*"); // temp + pressure + humid + clouds + wind (5)
-        Matcher m1 = p1.matcher(readFromFile(filename));
+        String currentData = readFromFile(filename);
+        String[] data = currentData.split(" final");
 
         tempsArray = new ArrayList<>();
         pressuresArray = new ArrayList<>();
         humiditiesArray = new ArrayList<>();
         cloudsArray = new ArrayList<>();
         windArray = new ArrayList<>();
-        while (m1.find()) {
-            String[] sarr = m1.group().split(" ", 5); // TODO: 31/07/17 CAND ADAUGI O VARIABILA INCREMENTEAZA NUMARUL DE LA SPLIT
-            tempsArray.add(Double.parseDouble(sarr[0]));
-            pressuresArray.add(Double.parseDouble(sarr[1]));
-            humiditiesArray.add(Double.parseDouble(sarr[2]));
-            cloudsArray.add(Double.parseDouble(sarr[3]));
-            windArray.add(Double.parseDouble(sarr[4]));
+        for (int i = 0; i < data.length; ++i) {
+            String[] sarr = data[i].split(" ");
+            tempsArray.add(Double.parseDouble(sarr[1]));
+            pressuresArray.add(Double.parseDouble(sarr[2]));
+            humiditiesArray.add(Double.parseDouble(sarr[3]));
+            cloudsArray.add(Double.parseDouble(sarr[4]));
+            windArray.add(Double.parseDouble(sarr[5]));
         }
     }
 

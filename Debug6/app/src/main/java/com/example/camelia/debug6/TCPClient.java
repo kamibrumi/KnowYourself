@@ -65,7 +65,6 @@ public class TCPClient {
 
                 //send the message to the server
                 out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-                System.out.println("dupa crearea printWriterului");
                 if (msg != "" && msg != null) sendMessage(msg);
                 //System.out.println("WE MADE THE PRINT WRITER");
                 Log.e("TCP Client", "C: Sent.");
@@ -84,7 +83,6 @@ public class TCPClient {
                         mMessageListener.messageReceived(serverMessage);
                     }
                     serverMessage = null;
-                    System.out.println(mRun);
                 }
                 System.out.println("THE MRUN VALUE IS " + mRun);
 

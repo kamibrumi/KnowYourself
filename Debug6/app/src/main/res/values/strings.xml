@@ -3,4 +3,5 @@
     <string name="dataFile">data6.txt</string>
     <string name="answeredFile">answered2.txt</string>
     <string name="predictionFile">prediction.txt</string>
+    <string name="idLatLonFile">idLatLon.txt</string>
 </resources>

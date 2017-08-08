@@ -10,8 +10,6 @@ public class WeatherReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-
         Intent intent2 = new Intent(context, CurrentWeatherIntentService.class);
         context.startService(intent2);
     }

@@ -13,7 +13,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MyNewIntentService extends IntentService {
-    private static final int NOTIFICATION_ID = 3;
+    private static final int NOTIFICATION_ID = 123;
 
 
     public MyNewIntentService() {
