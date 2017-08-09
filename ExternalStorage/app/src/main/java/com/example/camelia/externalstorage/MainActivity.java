@@ -20,12 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,23 +42,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
 
-        File file = new File (myDir, "data.txt");
 
-        writeToFile(file, "hellooooo");
+        writeToFile("hihi.txt", "hellooooo", true);
+        writeToFile("hihi.txt", "12", true);
+        writeToFile("hihi.txt", "234", false);
         String content = "";
         try {
-            content = readFromFile1(file);
+            content = readFromFile1("hihi.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("THE CONTENT OF THE FILE IS: " + content);
     }
 
-    public String readFromFile1(File file) throws IOException {
+    public String readFromFile1(String filename) throws IOException {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
         //get InputStream of a file
         InputStream is = new FileInputStream(file);
         String strContent;
@@ -98,16 +95,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void writeToFile(File file, String data) {
+    private void writeToFile(String filename, String data, Boolean append) {
         /*
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/docs");
         myDir.mkdirs();
 
         File file = new File (myDir, "data.txt"); */
-        if (file.exists ()) file.delete ();
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
         try {
-            FileOutputStream fos = new FileOutputStream(file);
+            FileOutputStream fos = new FileOutputStream(file, append);
             byte[] strb = data.getBytes();
             for(int i = 0; i < strb.length; ++i) {
                 fos.write(strb[i]);
@@ -118,58 +119,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             System.err.println("FileStreamsTest: " + e);
         }
-    }
-
-    void createExternalStoragePublicPicture() {
-        // Create a path where we will place our picture in the user's
-        // public pictures directory.  Note that you should be careful about
-        // what you place here, since the user often manages these files.  For
-        // pictures and other media owned by the application, consider
-        // Context.getExternalMediaDir().
-        path = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOCUMENTS);
-        File file = new File(path, "data.txt");
-
-        // Make sure the Pictures directory exists.
-        path.mkdirs();
-
-        try {
-            File inputFile = new File("farrago.txt");
-            File outputFile = new File("outagain.txt");
-
-            FileInputStream fis = new FileInputStream(inputFile);
-            FileOutputStream fos = new FileOutputStream(outputFile);
-            int c;
-
-            while ((c = fis.read()) != -1) {
-                fos.write(c);
-            }
-
-            fis.close();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("FileStreamsTest: " + e);
-        } catch (IOException e) {
-            System.err.println("FileStreamsTest: " + e);
-        }
-            /*
-            OutputStream os = new FileOutputStream(file);
-            byte[] data = new byte[is.available()];
-            tv.setText(is.read(data));
-            os.write(data);
-            is.close();
-            os.close(); */
-
-            // Tell the media scanner about the new file so that it is
-            // immediately available to the user.
-            MediaScannerConnection.scanFile(this,
-                    new String[] { file.toString() }, null,
-                    new MediaScannerConnection.OnScanCompletedListener() {
-                        public void onScanCompleted(String path, Uri uri) {
-                            Log.i("ExternalStorage", "Scanned " + path + ":");
-                            Log.i("ExternalStorage", "-> uri=" + uri);
-                        }
-                    });
     }
 
 }
