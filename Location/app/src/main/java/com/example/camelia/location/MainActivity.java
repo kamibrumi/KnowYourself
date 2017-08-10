@@ -1,7 +1,10 @@
 package com.example.camelia.location;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -29,6 +32,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+        Intent weatherIntent = new Intent(this,WeatherReceiver.class);
+        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                (this, 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        try {
+            System.out.println("inainte de a trimite pending intent");
+            weatherPendingIntent.send(this, 0, weatherIntent);
+            System.out.println("dupa ce am trimis");
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+        AlarmManager alarmManager1 = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis(),
+                1000 * 2, weatherPendingIntent);
+        System.out.println("am setat alarma!!");
 
         latTv = (TextView) findViewById(R.id.latitude);
         longTv = (TextView) findViewById(R.id.longitude);
@@ -95,25 +114,15 @@ public class MainActivity extends AppCompatActivity {
             Toast toast = Toast.makeText(this, "Open your location!", Toast.LENGTH_SHORT);
             toast.show();
         }
+
     }
 
     private void makeUseOfNewLocation(Location location) throws IOException {
-
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        List<Address> addresses = geocoder.getFromLocation(getLatitude(), getLongitude(), 1);
-        //String cityName = addresses.get(0).getAddressLine(0);
-        //String stateName = addresses.get(0).getAddressLine(1);
-        //String countryName = addresses.get(0).getAddressLine(2);
-
-        for(int i = 0; i < addresses.size(); ++i) {
-            System.out.println("ADDRESS " + i + ": " + addresses.get(i));
-
-        }
-
-        //System.out.println(cityName + " | " + stateName + " | " + countryName);
-
         latTv.setText(String.valueOf(getLatitude()));
         longTv.setText(String.valueOf(getLongitude()));
+        System.out.println("inainte de a declara coordinates");
+        double[] coordinates = new double[]{getLatitude(), getLongitude()};
+        System.out.println("dupa ce l-am declarat");
 
     }
 

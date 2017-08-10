@@ -7,6 +7,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+import com.example.camelia.location.R;
+import com.example.camelia.location.getURLData;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 
 public class CurrentWeatherIntentService extends IntentService{
     //private static final String URL = "http://api.openweathermap.org/data/2.5/weather?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
-    private static final String URL = "http://api.openweathermap.org/data/2.5/weather?q=Amposta,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+    private String URL;
     int dayOfMonth, month, minute, hour, startHour;
 
     public CurrentWeatherIntentService() {
@@ -34,13 +37,13 @@ public class CurrentWeatherIntentService extends IntentService{
     protected void onHandleIntent(Intent intent) {
         if (isNetworkAvailable()) {
             //System.out.println("INTENT STARTED!!!");
+            URL =
 
             Calendar calendar = GregorianCalendar.getInstance();
             minute = calendar.get(Calendar.MINUTE);
             hour = calendar.get(Calendar.HOUR_OF_DAY);
             dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
             month = calendar.get(Calendar.MONTH);
-            startHour = this.getResources().getInteger(R.integer.startHour);
 
             //System.out.println("am facut calendarul");
             String weatherData = "";
