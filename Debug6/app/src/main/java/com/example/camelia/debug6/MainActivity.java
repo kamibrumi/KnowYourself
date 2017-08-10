@@ -4,7 +4,6 @@ package com.example.camelia.debug6;
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,28 +14,25 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.text.DecimalFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
     Button commitB;
@@ -67,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();  // Always call the superclass method first
         try {
-            idll = readFromFile(getString(R.string.idLatLonFile), this);
+            idll = readFromExternalFile(getString(R.string.idLatLonFile));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,10 +80,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    private void writeToFile(String fileName, String data, Context context) {
+    private void writeToInternalFile(String fileName, String data, Context context) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
-            if (fileName == getString(R.string.answeredFile)) outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
@@ -96,71 +91,78 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String readFromFile(String fileName, Context context) throws IOException {
+    private void writeToExternalFile(String filename, String data, Boolean append) {
+        /*
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
 
-        String ret = "";
+        File file = new File (myDir, "data.txt"); */
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
 
+        File file = new File (myDir, filename);
         try {
-            InputStream inputStream = context.openFileInput(fileName);
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
+            FileOutputStream fos = new FileOutputStream(file, append);
+            byte[] strb = data.getBytes();
+            for(int i = 0; i < strb.length; ++i) {
+                fos.write(strb[i]);
             }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-            //File yourFile = new File(fileName);
-            //yourFile.createNewFile(); // if file already exists will do nothing
-            //readFromFile(fileName, context);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("FileStreamsTest: " + e);
         } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
+            System.err.println("FileStreamsTest: " + e);
         }
-
-        return ret;
     }
- /*
-    public void commit(View view) {
-        if (!answered) {
-            Calendar calendar = GregorianCalendar.getInstance();
-            hour = calendar.get(Calendar.HOUR_OF_DAY);
 
-            if (isNetworkAvailable()) {
-                if (hour >= startHour) {
-                    int howWasYourDay = pB.getProgress();
-                    System.out.println("how was my day------------> " + howWasYourDay);
-                    Intent intent = new Intent(this, ResponseActivity.class);
-                    intent.putExtra("how", String.valueOf(howWasYourDay));
-                    startActivity(intent);
-                } else {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Commit available at " + startHour + "h", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            } else {
-                Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-        } else {
-            Toast toast = Toast.makeText(getApplicationContext(), "Answer committed today!", Toast.LENGTH_SHORT);
-            toast.show();
+
+    //this method contains a modification: it has another return to detect wether a file is null or not (here **)
+    public String readFromExternalFile(String filename) throws IOException {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
+        //get InputStream of a file
+        InputStream is = new FileInputStream(file);
+        String strContent;
+
+                /*
+                 * There are several way to convert InputStream to String. First is using
+                 * BufferedReader as given below.
+                 */
+
+        //Create BufferedReader object
+        BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
+        StringBuffer sbfFileContents = new StringBuffer();
+        String line = null;
+
+        if (bReader.readLine() == null) return null; // here **
+        //read file line by line
+        while( (line = bReader.readLine()) != null){
+            sbfFileContents.append(line);
         }
-    } */
+
+        //finally convert StringBuffer object to String!
+        strContent = sbfFileContents.toString();
+
+                /*
+                 * Second and one liner approach is to use Scanner class. This is only supported
+                 * in Java 1.5 and higher version.
+                 */
+
+        //strContent = new Scanner(is).useDelimiter("\\A").next();
+        return strContent;
+
+    }
 
     public void commit(View view) {
 
         if (isNetworkAvailable()) {
-            // TODO: 7/08/17 do something
             if (isLocation()) {
-                writeToFile(getString(R.string.answeredFile), "false", this);
+                writeToInternalFile(getString(R.string.isFromMain), "true", this);
                 int howWasYourDay = pB.getProgress();
                 System.out.println("how was my day------------> " + howWasYourDay);
                 Intent intent = new Intent(this, ResponseActivity.class);
@@ -264,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     longitude = location.getLongitude();
 
                 }
-                writeToFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, getApplicationContext());
+                writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
                 //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
                 final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
                 final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast

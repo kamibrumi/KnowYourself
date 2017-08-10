@@ -10,6 +10,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,7 +24,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -57,7 +61,8 @@ public class ResponseActivity extends AppCompatActivity {
     double longitude;
     long cityId;
     String cityName;
-    boolean answered;
+    boolean isFromMain;
+    int dayOfMonth;
 
 
     @Override
@@ -81,20 +86,26 @@ public class ResponseActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+
+        Calendar calendar = GregorianCalendar.getInstance();
+        dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+
         //we cancel the notification
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         manager.cancel(123);
 
-        answered = Boolean.valueOf(readFromFile(getString(R.string.answeredFile)));
-        Calendar calendar = GregorianCalendar.getInstance();
+        isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
+        writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
         System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
-        if (answered) {
+        if (!isFromMain) {
 
             dayTv.setText("Tomorrow will be");
             dayTv.setVisibility(View.VISIBLE);
             loading.setVisibility(View.GONE);
-            Double percentage = Double.parseDouble(readFromFile(getString(R.string.predictionFile)));
+            String prediction = readFromInternalFile(getString(R.string.predictionFile));
+            String[] dayAndPrediction = prediction.split(" ");
+            Double percentage = Double.parseDouble(dayAndPrediction[1]);
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
 
@@ -193,7 +204,7 @@ public class ResponseActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                writeToFile(getString(R.string.idLatLonFile), cityId + " " + latitude + " " + longitude);
+                writeToExternalFile(getString(R.string.idLatLonFile), cityId + " " + latitude + " " + longitude, false);
 
                 URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
 
@@ -422,7 +433,7 @@ public class ResponseActivity extends AppCompatActivity {
                 double dayStdDevWind = getStdDev(getVariance(dayAverageWind, dayWindArray));
 
 
-                String fileContent_nightCurrentT = readFromFile("nightCurrentWeather.txt");
+                String fileContent_nightCurrentT = readFromInternalFile("nightCurrentWeather.txt");
                 //System.out.println("FILE CONTENT " + fileContent_nightCurrentT);
                 ArrayList<Double> nightTempsArray, nightPressuresArray, nightHumiditiesArray, nightCloudsArray, nightWindArray;
                 double nightAverageTemp, nightStdDevTemp, nightAveragePressure, nightStdDevPressure, nightAverageHumidity, nightStdDevHumidity, nightAverageClouds, nightStdDevClouds, nightAverageWind, nightStdDevWind;
@@ -463,7 +474,7 @@ public class ResponseActivity extends AppCompatActivity {
                 nightAverageWind = getAverage(nightWindArray);
                 nightStdDevWind = getStdDev(getVariance(nightAverageWind, nightWindArray));
 
-                writeToFile(getString(R.string.dataFile), day + " " + cityName + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
+                writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
                         + " " + nightAveragePressure + " " + nightStdDevPressure
                         + " " + nightAverageHumidity + " " + nightStdDevHumidity
                         + " " + nightAverageClouds + " " + nightStdDevClouds
@@ -482,7 +493,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + dayTomorrowAveragePressure + " " + dayTomorrowStdDevPressure
                         + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1.
                         + " " + dayTomorrowAverageClouds + " " + dayTomorrowStdDevClouds
-                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final");
+                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final", true);
             }
         });
         thread.start();
@@ -491,7 +502,7 @@ public class ResponseActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        writeToFile(getString(R.string.answeredFile), String.valueOf(true));
+
 
         // connect to the server
         new connectTask().execute("commit");
@@ -519,29 +530,41 @@ public class ResponseActivity extends AppCompatActivity {
         );
     }
 
-    private void writeToFile(String fileName, String data) {
+    private void writeToExternalFile(String filename, String data, Boolean append) {
+        /*
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, "data.txt"); */
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
         try {
-            OutputStreamWriter outputStreamWriter;
-            if (fileName == getString(R.string.dataFile))
-                outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_APPEND));
-            else outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_PRIVATE));
+            FileOutputStream fos = new FileOutputStream(file, append);
+            byte[] strb = data.getBytes();
+            for(int i = 0; i < strb.length; ++i) {
+                fos.write(strb[i]);
+            }
+            fos.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("FileStreamsTest: " + e);
+        } catch (IOException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+    }
+
+    private void writeToInternalFile(String fileName, String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_PRIVATE));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
-/*
-    public void sendMessageToServer(View v) {
-        String message = readFromFile(getString(R.string.dataFile));
-        System.out.println(message);
-        //sends the message to the server
-        if (mTcpClient != null) {
-            //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
-            mTcpClient.sendMessage(message);
-        }
-    } */
 
     public class connectTask extends AsyncTask<String,String,TCPClient> {
 
@@ -559,7 +582,11 @@ public class ResponseActivity extends AppCompatActivity {
             });
             System.out.println("message of do in backGROUND" + message[0]);
             if (message[0] == "commit") {
-                mTcpClient.run(readFromFile(getString(R.string.dataFile)));
+                try {
+                    mTcpClient.run(readFromExternalFile(getString(R.string.dataFile)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 System.out.println("AM COMITEJAT");
             }
             else {
@@ -573,16 +600,20 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            if (values[0] != null) writeToFile(getString(R.string.predictionFile), values[0]);
+            if (values[0] != null) writeToInternalFile(getString(R.string.predictionFile),String.valueOf(dayOfMonth) + " " + values[0]);
             System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
 
-            if (answered) dayTv.setText("Tomorrow will be");
-            else dayTv.setText("The current day may be");
+            dayTv.setText("Tomorrow will be");
 
             System.out.println("DESPUES DE SET TEXT");
             dayTv.setVisibility(View.VISIBLE);
             loading.setVisibility(View.GONE);
-            Double percentage = Double.parseDouble(readFromFile(getString(R.string.predictionFile)));
+
+            String prediction = readFromInternalFile(getString(R.string.predictionFile));
+            String[] dayAndPrediction = prediction.split(" ");
+            Double percentage = Double.parseDouble(dayAndPrediction[1]);
+            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+            
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
             System.out.println("STOP CLIENT DIN PROGRESS UPDATE");
@@ -595,7 +626,45 @@ public class ResponseActivity extends AppCompatActivity {
         }
     }
 
-    private String readFromFile(String fileName) {
+    public String readFromExternalFile(String filename) throws IOException {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
+        //get InputStream of a file
+        InputStream is = new FileInputStream(file);
+        String strContent;
+
+                /*
+                 * There are several way to convert InputStream to String. First is using
+                 * BufferedReader as given below.
+                 */
+
+        //Create BufferedReader object
+        BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
+        StringBuffer sbfFileContents = new StringBuffer();
+        String line = null;
+
+        //read file line by line
+        while( (line = bReader.readLine()) != null){
+            sbfFileContents.append(line);
+        }
+
+        //finally convert StringBuffer object to String!
+        strContent = sbfFileContents.toString();
+
+                /*
+                 * Second and one liner approach is to use Scanner class. This is only supported
+                 * in Java 1.5 and higher version.
+                 */
+
+        //strContent = new Scanner(is).useDelimiter("\\A").next();
+        return strContent;
+
+    }
+
+    private String readFromInternalFile(String fileName) {
 
         String ret = "";
 
@@ -627,7 +696,7 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     private void getArrayLists(String filename) {
-        String currentData = readFromFile(filename);
+        String currentData = readFromInternalFile(filename);
         String[] data = currentData.split(" final");
 
         tempsArray = new ArrayList<>();
