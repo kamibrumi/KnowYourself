@@ -1,12 +1,13 @@
 library("rpart")
 dete.df = read.table("sample.txt", header = FALSE)
-names(dete.df) <- c("weekDay", "gb", "nightAverageTemp", "nightStdDev", "dayAverageTemp", "dayStdDev", "nightTomorrowAverageTemp", "nightTomorrowStdDev", "dayTomorrowAverageTemp", "dayTomorrowStdDev")
+dete.df
+names(dete.df) <- c("weekDay", "location", "gb", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind", "nightTomorrowAverageTemp", "nightTomorrowStdDevTemp", "nightTomorrowAveragePressure", "nightTomorrowStdDevPressure", "nightTomorrowAverageHumidity", "nightTomorrowStdDevHumidity", "nightTomorrowAverageClouds", "nightTomorrowStdDevClouds", "nightTomorrowAverageWind", "nightTomorrowStdDevWind", "dayTomorrowAverageTemp", "dayTomorrowStdDevTemp", "dayTomorrowAveragePressure", "dayTomorrowStdDevPressure", "dayTomorrowAverageHumidity", "dayTomorrowStdDevHumidity", "dayTomorrowAverageClouds", "dayTomorrowStdDevClouds", "dayTomorrowAverageWind", "dayTomorrowStdDevWind")
 #dete.df
 #II ZICEM LA R PART CA ULTIMA COLUMNA NU II PENTRU TRAINING
-deteB.df <- dete.df[,c("weekDay", "gb", "nightAverageTemp", "nightStdDev", "dayAverageTemp", "dayStdDev")]
+deteB.df <- dete.df[,c("weekDay", "gb", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind")]
 #cream modelul
 dete.df$weekDay = as.factor(dete.df$weekDay) #sa ma informez de as.factor, SA VAD DE CE NU-L DETECTEAZA CA SI FACTOR (RPARTUL)
-dete.df$gb = as.factor(dete.df$gb)
+dete.df$location = as.factor(dete.df$location)
 dete.rpart1 = rpart(gb ~ ., data = as.data.frame(deteB.df), parms=list(split='gini'), control=rpart.control(cp=0.00001, xval=10, maxdepth=15))
 plot(dete.rpart1, uniform = TRUE) 
 text(dete.rpart1, use.n = TRUE, cex = 0.75)
@@ -27,7 +28,7 @@ dete.rpart2 = prune(dete.rpart1, cp = cpPrune)
 
 #predict using decision trees
 
-deteC.df <- dete.df[nrow(dete.df),c("weekDay", "nightTomorrowAverageTemp", "nightTomorrowStdDev", "dayTomorrowAverageTemp", "dayTomorrowStdDev")]
+deteC.df <- dete.df[nrow(dete.df),c("weekDay", "nightTomorrowAverageTemp", "nightTomorrowStdDevTemp", "nightTomorrowAveragePressure", "nightTomorrowStdDevPressure", "nightTomorrowAverageHumidity", "nightTomorrowStdDevHumidity", "nightTomorrowAverageClouds", "nightTomorrowStdDevClouds", "nightTomorrowAverageWind", "nightTomorrowStdDevWind", "dayTomorrowAverageTemp", "dayTomorrowStdDevTemp", "dayTomorrowAveragePressure", "dayTomorrowStdDevPressure", "dayTomorrowAverageHumidity", "dayTomorrowStdDevHumidity", "dayTomorrowAverageClouds", "dayTomorrowStdDevClouds", "dayTomorrowAverageWind", "dayTomorrowStdDevWind")]
 #deteC.df
 
 if (deteC.df$weekDay == 7) {
@@ -36,10 +37,11 @@ if (deteC.df$weekDay == 7) {
   deteC.df$weekDay = as.factor(as.numeric(tail(deteC.df, 1)$"weekDay") + 1)
 }
 
-names(deteC.df) <- c("weekDay", "nightAverageTemp", "nightStdDev", "dayAverageTemp", "dayStdDev")
+names(deteC.df) <- c("weekDay", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind")
 deteC.df$weekDay = as.numeric(deteC.df$weekDay)
-result <- predict(dete.rpart2, deteC.df, type = "prob", na.action = na.pass)
-cat("Your day will be good with a percentage of", result[1, 2]*100)
+result <- predict(dete.rpart2, deteC.df, type = "matrix", na.action = na.pass)
+result
+cat("Your day will be good with a percentage of", result) #result[1, 2]*100
 
 #uitate pe pagina asta web:
 #https://stat.ethz.ch/R-manual/R-devel/library/rpart/html/predict.rpart.html

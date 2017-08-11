@@ -62,7 +62,7 @@ public class ResponseActivity extends AppCompatActivity {
     long cityId;
     String cityName;
     boolean isFromMain;
-    int dayOfMonth;
+    int day, dayOfMonth, month, year; //day is the the day of week
 
 
     @Override
@@ -89,6 +89,8 @@ public class ResponseActivity extends AppCompatActivity {
 
         Calendar calendar = GregorianCalendar.getInstance();
         dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        month = calendar.get(Calendar.MONTH);
+        year = calendar.get(Calendar.YEAR);
 
         //we cancel the notification
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
@@ -111,7 +113,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
         else {
-            // Acquire a reference to the system Location Manager
+            // Acquire a reference to the syfalsestem Location Manager
             LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             System.out.println("LOCATION MANAGER DECLARED");
             // Define a listener that responds to location updates
@@ -203,6 +205,15 @@ public class ResponseActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
+                //we put underscore in between the words of the cityName
+                String[] cn = cityName.split(" ");
+                String res = "";
+                for (int i = 0; i < cn.length-1; ++i) {
+                    res += cn[i] + "_";
+                }
+                res += cn[cn.length - 1];
+                cityName = res;
 
                 writeToExternalFile(getString(R.string.idLatLonFile), cityId + " " + latitude + " " + longitude, false);
 
@@ -401,7 +412,8 @@ public class ResponseActivity extends AppCompatActivity {
                 double nightTomorrowStdDevWind = getStdDev(getVariance(nightTomorrowAverageWind, nightTomorrowWind));
 
                 Calendar calendar = GregorianCalendar.getInstance();
-                int day = calendar.get(Calendar.DAY_OF_WEEK);
+                day = calendar.get(Calendar.DAY_OF_WEEK);
+
 
                 //we calculate averages of the CURRENT night and day
                 getArrayLists("dayCurrentWeather.txt");
@@ -474,7 +486,25 @@ public class ResponseActivity extends AppCompatActivity {
                 nightAverageWind = getAverage(nightWindArray);
                 nightStdDevWind = getStdDev(getVariance(nightAverageWind, nightWindArray));
 
-                writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb + " " + nightAverageTemp + " " + nightStdDevTemp
+                String predictionDay = readFromInternalFile(getString(R.string.predictionDayFile));
+                System.out.println("CONTINUTUL FILE PREDICTIONdAY: " + predictionDay);
+
+                if (predictionDay == dayOfMonth + "-" + month + "-" + year) {
+                    String dataFileContent = null;
+                    try {
+                        dataFileContent = readFromExternalFile(getString(R.string.dataFile));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    String[] data = dataFileContent.split(" final");
+                    for (int i = 0; i < data.length - 1; ++i) {
+                        dataFileContent = dataFileContent + " final";
+                    }
+                    writeToExternalFile(getString(R.string.dataFile), dataFileContent, false);
+                }
+
+                writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb
+                        + " " + nightAverageTemp + " " + nightStdDevTemp
                         + " " + nightAveragePressure + " " + nightStdDevPressure
                         + " " + nightAverageHumidity + " " + nightStdDevHumidity
                         + " " + nightAverageClouds + " " + nightStdDevClouds
@@ -601,6 +631,7 @@ public class ResponseActivity extends AppCompatActivity {
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
             if (values[0] != null) writeToInternalFile(getString(R.string.predictionFile),String.valueOf(dayOfMonth) + " " + values[0]);
+            writeToInternalFile(getString(R.string.predictionDayFile), dayOfMonth + "-" + month + "-" + year);
             System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
 
             dayTv.setText("Tomorrow will be");
@@ -613,7 +644,7 @@ public class ResponseActivity extends AppCompatActivity {
             String[] dayAndPrediction = prediction.split(" ");
             Double percentage = Double.parseDouble(dayAndPrediction[1]);
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-            
+
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
             System.out.println("STOP CLIENT DIN PROGRESS UPDATE");
@@ -622,6 +653,14 @@ public class ResponseActivity extends AppCompatActivity {
             //serverResponse.setText(values[0]);
             //arrayList.add(values[0]);
             //we can add the message received from server to a text view
+            //return;
+
+        }
+
+        @Override
+        protected void onPostExecute(TCPClient result){
+            super.onPostExecute(result);
+            mTcpClient.stopClient();
 
         }
     }
