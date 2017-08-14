@@ -67,23 +67,16 @@ public class RandomData {
 
 			try{
 				 PrintWriter writer = new PrintWriter("sampleForPrediction.txt");//, "UTF-8"
-				 writer.println(day + " " + gb + " " + location
-						    + " " + averageTemp + " " + stdDevTemp
-						    + " " + averagePressure + " " + stdDevPressure
-						    + " " + averageHumidity + " " + stdDevHumidity
-						    + " " + averageClouds + " " + stdDevClouds
-						    + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips);
-				 writer.close();
-			} catch (IOException e) {
-				System.out.println("FATAL: Raised exception while trying to write to sampleForPrediction.txt");// do something
-			}
-
-
-			System.out.println(day + " " + location + tomorrowAverageTemp + " " + tomorrowStdDevTemp
+				 writer.println(day + " " + location 
+							 + " " + tomorrowAverageTemp + " " + tomorrowStdDevTemp
 						    + " " + tomorrowAveragePressure + " " + tomorrowStdDevPressure
 						    + " " + tomorrowAverageHumidity + " " + tomorrowStdDevHumidity
 						    + " " + tomorrowAverageClouds + " " + tomorrowStdDevClouds
 						    + " " + tomorrowAverageWind + " " + tomorrowStdDevWind + " "
                       + " " + stripId + " " + durationInStrips);
+				 writer.close();
+			} catch (IOException e) {
+				System.out.println("FATAL: Raised exception while trying to write to sampleForPrediction.txt");// do something
+			}
 	}
 }
