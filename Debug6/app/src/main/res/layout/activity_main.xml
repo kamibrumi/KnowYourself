@@ -67,7 +67,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Commit"
+        android:text="Predict"
         android:id="@+id/commit"
         android:layout_below="@id/progressTracker"
         android:layout_centerHorizontal="true"

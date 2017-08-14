@@ -489,6 +489,8 @@ public class ResponseActivity extends AppCompatActivity {
                 String predictionDay = readFromInternalFile(getString(R.string.predictionDayFile));
                 System.out.println("CONTINUTUL FILE PREDICTIONdAY: " + predictionDay);
 
+
+                //we look wether the user answered today already. If the answer is yes, then we overwrite the last line of the data file.
                 if (predictionDay == dayOfMonth + "-" + month + "-" + year) {
                     String dataFileContent = null;
                     try {
@@ -496,11 +498,12 @@ public class ResponseActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    String newDataFileContent = "";
                     String[] data = dataFileContent.split(" final");
                     for (int i = 0; i < data.length - 1; ++i) {
-                        dataFileContent = dataFileContent + " final";
+                        newDataFileContent = newDataFileContent + data[i] + " final";
                     }
-                    writeToExternalFile(getString(R.string.dataFile), dataFileContent, false);
+                    writeToExternalFile(getString(R.string.dataFile), newDataFileContent, false);
                 }
 
                 writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb
@@ -561,12 +564,6 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     private void writeToExternalFile(String filename, String data, Boolean append) {
-        /*
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, "data.txt"); */
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/docs");
         myDir.mkdirs();
