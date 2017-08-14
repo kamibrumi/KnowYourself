@@ -494,7 +494,7 @@ public class ResponseActivity extends AppCompatActivity {
             writeToInternalFile(getString(R.string.predictionDayFile), dayOfMonth + "-" + month + "-" + year);
             System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
 
-            dayTv.setText("Tomorrow will be");
+            dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17  
 
             System.out.println("DESPUES DE SET TEXT");
             dayTv.setVisibility(View.VISIBLE);
