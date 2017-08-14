@@ -346,13 +346,13 @@ public class ResponseActivity extends AppCompatActivity {
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
 
-                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + cityName //// TODO: 14/08/17 DAY!!!
+                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + cityName
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
                                 + " " + futureAverageClouds + " " + futureStdDevClouds
                                 + " " + futureAverageWind + " " + futureStdDevWind + " "
-                                + " " + futureStripId + " " + futureDurationInStrips + " final", true); // TODO: 14/08/17 DURATION IN STRIPS!!
+                                + " " + futureStripId + " " + futureDurationInStrips + " final", true);
 
                     }
                 }
@@ -473,7 +473,7 @@ public class ResponseActivity extends AppCompatActivity {
             System.out.println("message of do in backGROUND" + message[0]);
             if (message[0] == "commit") {
                 try {
-                    mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)));
+                    mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)) + "SPLIT" + readFromExternalFile(getString(R.string.predictionDataFile)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
