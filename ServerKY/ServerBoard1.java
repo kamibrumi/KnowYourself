@@ -49,8 +49,8 @@ public class ServerBoard1 {
                     //TCPServer class (at while)
                     public void messageReceived(String message) {
 						BufferedWriter bw = null;
-						FileWriter fwCurrent = null;
-						FileWriter fwFuture = null;
+						FileWriter fw = null;
+						System.out.println(message);
 
 						
 						if (message != "quit") {
@@ -85,12 +85,12 @@ public class ServerBoard1 {
 							try {
 
 
-								fwCurrent = new FileWriter("currentData.txt");
-								fwFuture = new FileWriter("futureData.txt");
-								bw = new BufferedWriter(fwCurrent);
+								fw = new FileWriter("sampleForModel.txt");
+								bw = new BufferedWriter(fw);
 								bw.write(currentData);
-							
-								bw = new BufferedWriter(fwFuture);
+
+								fw = new FileWriter("sampleForPrediction.txt");
+								bw = new BufferedWriter(fw);
 								bw.write(futureData);
 
 								System.out.println("Done");
@@ -106,10 +106,7 @@ public class ServerBoard1 {
 									if (bw != null)
 										bw.close();
 
-									if (fwCurrent != null)
-										fw.close();
-
-									if (fwFuture != null)
+									if (fw != null)
 										fw.close();
 
 								} catch (IOException ex) {

@@ -352,7 +352,7 @@ public class ResponseActivity extends AppCompatActivity {
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
                                 + " " + futureAverageClouds + " " + futureStdDevClouds
                                 + " " + futureAverageWind + " " + futureStdDevWind + " "
-                                + " " + futureStripId + " " + futureDurationInStrips + " final", true);
+                                + " " + futureStripId + " " + futureDurationInStrips + " final", false);
 
                     }
                 }
@@ -474,6 +474,7 @@ public class ResponseActivity extends AppCompatActivity {
             if (message[0] == "commit") {
                 try {
                     mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)) + "SPLIT" + readFromExternalFile(getString(R.string.predictionDataFile)));
+                    System.out.println("CURRENT WEATHER FILE: " + readFromExternalFile(getString(R.string.currentDataFile)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -508,7 +509,6 @@ public class ResponseActivity extends AppCompatActivity {
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
 
-            writeToInternalFile(getString(R.string.xsFile), "");
             System.out.println("STOP CLIENT DIN PROGRESS UPDATE");
             mTcpClient.stopClient();
 
@@ -522,6 +522,7 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(TCPClient result){
             super.onPostExecute(result);
+            System.out.println("SE EXECUTA ON POST EXECUTE FUN");
             mTcpClient.stopClient();
 
         }
@@ -599,7 +600,6 @@ public class ResponseActivity extends AppCompatActivity {
     private void getArrayLists() {
         String currentData = readFromInternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
-
         durationInStrips = data.length;
 
         tempsArray = new ArrayList<>();
@@ -615,6 +615,7 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[3]));
             windArray.add(Double.parseDouble(sarr[4]));
         }
+        writeToInternalFile(getString(R.string.xsFile), "");
     }
 
 
@@ -642,7 +643,6 @@ public class ResponseActivity extends AppCompatActivity {
 
     private double getStdDev(double variance)
     {
-        //System.out.println("PRINT 13(get stdvDev) --------------");
         return Math.sqrt(variance);
     }
 }
