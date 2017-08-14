@@ -1,3 +1,4 @@
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.ThreadLocalRandom;
@@ -13,13 +14,14 @@ public class RandomData {
 		} catch (IOException e) {
 			System.out.println("FATAL: Raised exception while trying to write to sampleForModel.txt");// do something
 		}
+		ArrayList<Integer> locations = new ArrayList<Integer>();
 		for (int i = 0; i < 50; ++i) { //now we are iterating over the strips
 			int stripId = i%8;
 			int day = 1 + i/8;
 			int durationInStrips = ThreadLocalRandom.current().nextInt(1, 3);
 			int gb = ThreadLocalRandom.current().nextInt(0, 100);
 			int location = ThreadLocalRandom.current().nextInt(0, 50);
-
+			locations.add(location);
 
 			Double averageTemp = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
 			Double stdDevTemp = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
@@ -55,7 +57,9 @@ public class RandomData {
 			int stripId = i%8;
 			int day = 1 + i/8;
 			int durationInStrips = ThreadLocalRandom.current().nextInt(1, 3);
-			int location = ThreadLocalRandom.current().nextInt(0, 50);
+			//now the locations are a subset of those generated in the training, otherwise we can
+			//get errors: the locations ArrayList is being used
+			//int location = ThreadLocalRandom.current().nextInt(0, 50);
 
 			Double futureAverageTemp = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
 			Double futureStdDevTemp = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
@@ -73,7 +77,7 @@ public class RandomData {
 			Double futureStdDevWind = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
 
-			writer.println(day + " " + location 
+			writer.println(day + " " + locations.get(i) 
 					   + " " + futureAverageTemp + " " + futureStdDevTemp
 					   + " " + futureAveragePressure + " " + futureStdDevPressure
 					   + " " + futureAverageHumidity + " " + futureStdDevHumidity

@@ -1,51 +1,45 @@
 library("rpart")
-dete.df = read.table("sampleForModel.txt", header = FALSE)
-dete.df
-names(dete.df) <- c("weekDay", "gb", "location", "averageTemp", "stdDevTemp", "averagePressure", "stdDevPressure", "averageHumidity", "stdDevHumidity", "averageClouds", "stdDevClouds", "averageWind", "stdDevWind"
+deteB.df = read.table("sampleForModel.txt", header = FALSE)
+deteB.df
+names(deteB.df) <- c("weekDay", "gb", "location", "averageTemp", "stdDevTemp", "averagePressure", "stdDevPressure", "averageHumidity", "stdDevHumidity", "averageClouds", "stdDevClouds", "averageWind", "stdDevWind", "stripId", "durationInStrips")
 
-                    "nightTomorrowAverageTemp", "nightTomorrowStdDevTemp", "nightTomorrowAveragePressure", "nightTomorrowStdDevPressure", "nightTomorrowAverageHumidity", "nightTomorrowStdDevHumidity", "nightTomorrowAverageClouds", "nightTomorrowStdDevClouds", "nightTomorrowAverageWind", "nightTomorrowStdDevWind", "dayTomorrowAverageTemp", "dayTomorrowStdDevTemp", "dayTomorrowAveragePressure", "dayTomorrowStdDevPressure", "dayTomorrowAverageHumidity", "dayTomorrowStdDevHumidity", "dayTomorrowAverageClouds", "dayTomorrowStdDevClouds", "dayTomorrowAverageWind", "dayTomorrowStdDevWind")
-#dete.df
+
 #II ZICEM LA R PART CA ULTIMA COLUMNA NU II PENTRU TRAINING
-deteB.df <- dete.df[,c("weekDay", "gb", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind")]
+#deteB.df <- dete.df[,c("weekDay", "gb", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind")]
 #cream modelul
-dete.df$weekDay = as.factor(dete.df$weekDay) #sa ma informez de as.factor, SA VAD DE CE NU-L DETECTEAZA CA SI FACTOR (RPARTUL)
-dete.df$location = as.factor(dete.df$location)
-dete.rpart1 = rpart(gb ~ ., data = as.data.frame(deteB.df), parms=list(split='gini'), control=rpart.control(cp=0.00001, xval=10, maxdepth=15))
-plot(dete.rpart1, uniform = TRUE) 
-text(dete.rpart1, use.n = TRUE, cex = 0.75)
+deteB.df$weekDay = as.factor(deteB.df$weekDay) #sa ma informez de as.factor, SA VAD DE CE NU-L DETECTEAZA CA SI FACTOR (RPARTUL)
+levels(deteB.df$weekDay) <- c("1", "2", "3", "4", "5", "6", "7")
+deteB.df$location = as.factor(deteB.df$location)
+deteB.rpart1 = rpart(gb ~ ., data = as.data.frame(deteB.df), parms=list(split='gini'), control=rpart.control(cp=0.00001, xval=10, maxdepth=15))
+plot(deteB.rpart1, uniform = TRUE) 
+text(deteB.rpart1, use.n = TRUE, cex = 0.75)
 #plotcp(dete.rpart1)
 #printcp(dete.rpart1)
 #dete.rpart1
 # automatically select the complexity parameter associated with the smallest cross-validated error.
 #http://www.statmethods.net/advstats/cart.html
-cpPrune <- dete.rpart1$cptable[which.min(dete.rpart1$cptable[,"xerror"]),"CP"] 
+cpPrune <- deteB.rpart1$cptable[which.min(deteB.rpart1$cptable[,"xerror"]),"CP"] 
 #ACUM AR TREBUI SA PUN CP-UL ASTA AICI?
-dete.rpart2 = prune(dete.rpart1, cp = cpPrune)
+deteB.rpart2 = prune(deteB.rpart1, cp = cpPrune)
 #summary(dete.rpart2)
 #dete.rpart2
 #plotcp(dete.rpart2)
 #printcp(dete.rpart2)
-#plot(dete.rpart2, uniform = TRUE)
-#text(dete.rpart2, use.n = TRUE, cex = 0.75)
+#plot(deteB.rpart2, uniform = TRUE)
+#text(deteB.rpart2, use.n = TRUE, cex = 0.75)
 
 #predict using decision trees
 
-deteC.df <- dete.df[nrow(dete.df),c("weekDay", "nightTomorrowAverageTemp", "nightTomorrowStdDevTemp", "nightTomorrowAveragePressure", "nightTomorrowStdDevPressure", "nightTomorrowAverageHumidity", "nightTomorrowStdDevHumidity", "nightTomorrowAverageClouds", "nightTomorrowStdDevClouds", "nightTomorrowAverageWind", "nightTomorrowStdDevWind", "dayTomorrowAverageTemp", "dayTomorrowStdDevTemp", "dayTomorrowAveragePressure", "dayTomorrowStdDevPressure", "dayTomorrowAverageHumidity", "dayTomorrowStdDevHumidity", "dayTomorrowAverageClouds", "dayTomorrowStdDevClouds", "dayTomorrowAverageWind", "dayTomorrowStdDevWind")]
-#deteC.df
+#now we read the x's from the sampleForPrediction.txt file in order to conduct predictions
+deteC.df = read.table("sampleForPrediction.txt", header = FALSE)
+names(deteC.df) <- c("weekDay", "location", "averageTemp", "stdDevTemp", "averagePressure", "stdDevPressure", "averageHumidity", "stdDevHumidity", "averageClouds", "stdDevClouds", "averageWind", "stdDevWind", "stripId", "durationInStrips")
 
-if (deteC.df$weekDay == 7) {
-  deteC.df$weekDay = as.factor(1)
-} else {
-  deteC.df$weekDay = as.factor(as.numeric(tail(deteC.df, 1)$"weekDay") + 1)
-}
+deteC.df$weekDay = as.factor(deteC.df$weekDay)
+deteC.df$location = as.factor(deteC.df$location)
 
-names(deteC.df) <- c("weekDay", "nightAverageTemp", "nightStdDevTemp", "nightAveragePressure", "nightStdDevPressure", "nightAverageHumidity", "nightStdDevHumidity", "nightAverageTempClouds", "nightStdDevClouds", "nightAverageWind", "nightStdDevWind", "dayAverageTemp", "dayStdDevTemp", "dayAveragePressure", "dayStdDevPressure", "dayAverageHumidity", "dayStdDevHumidity", "dayAverageTempClouds", "dayStdDevClouds", "dayAverageWind", "dayStdDevWind")
-deteC.df$weekDay = as.numeric(deteC.df$weekDay)
-result <- predict(dete.rpart2, deteC.df, type = "matrix", na.action = na.pass)
+result <- predict(deteB.rpart2, deteC.df, type = "matrix", na.action = na.pass) #we are predicting for multiple individuals
 result
-cat("Your day will be good with a percentage of", result) #result[1, 2]*100
+cat("Your day will be good with a percentage of ", result) #result[1, 2]*100
 
 #uitate pe pagina asta web:
 #https://stat.ethz.ch/R-manual/R-devel/library/rpart/html/predict.rpart.html
-
-
