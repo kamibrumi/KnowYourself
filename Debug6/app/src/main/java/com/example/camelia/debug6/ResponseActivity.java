@@ -59,19 +59,16 @@ public class ResponseActivity extends AppCompatActivity {
     long cityId;
     String cityName;
     boolean isFromMain;
-    int day, dayOfMonth, month, year; //day is the the day of week
+    int day, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_response);
-
-        //serverResponse = (TextView) findViewById(R.id.serverResponse); //TODO: cand o sa primim un raspuns de la server o sa folosim textView-ul asta ca sa scriem rezultatul
         loadMessage = (TextView) findViewById(R.id.loadMessage);
         loading = (ProgressBar) findViewById(R.id.loading);
         dayTv = (TextView) findViewById(R.id.dayTv);
-
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
@@ -88,6 +85,7 @@ public class ResponseActivity extends AppCompatActivity {
         dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
         month = calendar.get(Calendar.MONTH);
         year = calendar.get(Calendar.YEAR);
+        hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
         //we cancel the notification
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
@@ -97,7 +95,7 @@ public class ResponseActivity extends AppCompatActivity {
         writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
         System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
-        if (!isFromMain) {
+        if (!isFromMain) { //// TODO: 14/08/17 if(xsFile is empty) --> arata continutul la prediction file... Astept sa imi deie Iuli formatul la raspunsul ca sa bag in listView.
 
             dayTv.setText("Tomorrow will be");
             dayTv.setVisibility(View.VISIBLE);
@@ -236,186 +234,118 @@ public class ResponseActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                //we get tomorrow's date
-                Date date = new Date();
-                SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd");
-                String dt = dayFormat.format(date); // Start date
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                Calendar c = Calendar.getInstance();
-                try {
-                    c.setTime(sdf.parse(dt));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                c.add(Calendar.DATE, 1);  // number of days to add
-                dt = sdf.format(c.getTime());  // dt is now the new date
-
-                //we start calculating the average and standard deviation of tomorrow (day and night separatelly)
+                //we start calculating the average and standard deviation of the future
                 // TEMPERATURE
-                double dayTomorrowAverageTemp = 0;
-                double nightTomorrowAverageTemp = 0;
+                double futureSumTemp = 0;
+                double futureAverageTemp = 0;
 
-                ArrayList<Double> dayTomorrowTemps = new ArrayList<Double>();
-                ArrayList<Double> nightTomorrowTemps = new ArrayList<Double>();
+                ArrayList<Double> futureTemps = new ArrayList<Double>();
 
                 // PRESSURE
-                double dayTomorrowAveragePressure = 0;
-                double nightTomorrowAveragePressure = 0;
+                double futureSumPressure = 0;
+                double futureAveragePressure = 0;
 
-                ArrayList<Double> dayTomorrowPressures = new ArrayList<Double>();
-                ArrayList<Double> nightTomorrowPressures = new ArrayList<Double>();
+                ArrayList<Double> futurePressures = new ArrayList<Double>();
 
                 // HUMIDITY
-                int dayTomorrowAverageHumidity = 0;
-                int nightTomorrowAverageHumidity = 0;
+                double futureSumHumidity = 0;
+                double futureAverageHumidity = 0;
 
-                ArrayList<Double> dayTomorrowHumidities = new ArrayList<Double>();
-                ArrayList<Double> nightTomorrowHumidities = new ArrayList<Double>();
+                ArrayList<Double> futureHumidities = new ArrayList<Double>();
 
                 // CLOUDS
-                double dayTomorrowAverageClouds = 0;
-                double nightTomorrowAverageClouds = 0;
+                double futureSumClouds = 0;
+                double futureAverageClouds = 0;
 
-                ArrayList<Double> dayTomorrowClouds = new ArrayList<Double>();
-                ArrayList<Double> nightTomorrowClouds = new ArrayList<Double>();
+                ArrayList<Double> futureClouds = new ArrayList<Double>();
 
                 // WIND
-                double dayTomorrowAverageWind = 0;
-                double nightTomorrowAverageWind = 0;
+                double futureSumWind = 0;
+                double futureAverageWind = 0;
 
-                ArrayList<Double> dayTomorrowWind = new ArrayList<Double>();
-                ArrayList<Double> nightTomorrowWind = new ArrayList<Double>();
+                ArrayList<Double> futureWind = new ArrayList<Double>();
 
-                int nrOfHoursDay = 0;
-                int nrOfHoursNight = 0;
-                String dt_compare = null;
-
-                for (int i = 0; i < arr.length(); i++) {
+                for (int i = 0; i < 24; i++) {
+                    String dt_compare = null;
                     try {
                         dt_compare = arr.getJSONObject(i).getString("dt_txt");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    if (dt_compare.contains(dt)) { //see if is tomorrow's date
-                        Pattern hourP = Pattern.compile("[0-9]*:[0-9]*:[0-9]*");
-                        Matcher hourM = hourP.matcher(dt_compare);
-                        if (hourM.find()) {
-                            //System.out.println("ORA: " + hourM.group());
-                            int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
-                            JSONObject main = null;
-                            Double t = 25.;
-                            Double pressure = 1020.;
-                            Double humid = 50.;
-                            Double clouds = 50.;
-                            Double wind = 5.;
-                            try {
-                                main = arr.getJSONObject(i).getJSONObject("main");
-                                t = main.getDouble("temp");
-                                pressure = main.getDouble("pressure");
-                                humid = main.getInt("humidity") * 1.; // convert it from int to double
-                                clouds = arr.getJSONObject(i).getJSONObject("clouds").getInt("all") * 1.;
-                                wind = arr.getJSONObject(i).getJSONObject("wind").getDouble("speed");
+
+                    Pattern hourP = Pattern.compile("[0-9]*:[0-9]*:[0-9]*");
+                    Matcher hourM = hourP.matcher(dt_compare);
+                    if (hourM.find()) {
+                        //System.out.println("ORA: " + hourM.group());
+                        int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
+                        int futureStripId = hour/3;
+                        int futureDurationInStrips = i + 1;
+                        JSONObject main = null;
+                        Double t = 25.;
+                        Double pressure = 1020.;
+                        Double humid = 50.;
+                        Double clouds = 50.;
+                        Double wind = 5.;
+                        try {
+                            main = arr.getJSONObject(i).getJSONObject("main");
+                            t = main.getDouble("temp");
+                            pressure = main.getDouble("pressure");
+                            humid = main.getInt("humidity") * 1.; // convert it from int to double
+                            clouds = arr.getJSONObject(i).getJSONObject("clouds").getInt("all") * 1.;
+                            wind = arr.getJSONObject(i).getJSONObject("wind").getDouble("speed");
 
 
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                            if (hour <= 8) {
-                                ++nrOfHoursNight;
-                                // TEMPERATURE
-                                nightTomorrowAverageTemp += t;
-                                nightTomorrowTemps.add(t);
-
-                                //PRESSURE
-                                nightTomorrowAveragePressure += pressure;
-                                nightTomorrowPressures.add(pressure);
-
-                                // HUMIDITY
-                                nightTomorrowAverageHumidity += humid;
-                                nightTomorrowHumidities.add(humid);
-
-                                // CLOUDS
-                                nightTomorrowAverageClouds += clouds;
-                                nightTomorrowClouds.add(clouds);
-
-                                // WIND
-                                nightTomorrowAverageWind += wind;
-                                nightTomorrowWind.add(wind);
-                            }
-                            else {
-                                ++nrOfHoursDay;
-                                // TEMPERATURE
-                                dayTomorrowAverageTemp += t;
-                                dayTomorrowTemps.add(t);
-
-                                // PRESSURE
-                                dayTomorrowAveragePressure += pressure;
-                                dayTomorrowPressures.add(pressure);
-
-                                // HUMIDITY
-                                dayTomorrowAverageHumidity += humid;
-                                dayTomorrowHumidities.add(humid);
-
-                                // CLOUDS
-                                dayTomorrowAverageClouds += clouds;
-                                dayTomorrowClouds.add(clouds);
-
-                                // WIND
-                                dayTomorrowAverageWind += wind;
-                                dayTomorrowWind.add(wind);
-                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
+                        // TEMPERATURE
+                        futureTemps.add(t);
+                        futureSumTemp += t;
+                        futureAverageTemp = futureSumTemp/futureDurationInStrips;
+                        double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTemps));
+
+                        // PRESSURE
+                        futurePressures.add(pressure);
+                        futureSumPressure += pressure;
+                        futureAveragePressure = futureSumPressure/futureDurationInStrips;
+                        double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressures));
+
+                        // HUMIDITY
+                        futureHumidities.add(humid);
+                        futureSumHumidity += humid;
+                        futureAverageHumidity = futureSumHumidity/futureDurationInStrips;
+                        double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumidities));
+
+                        // CLOUDS
+                        futureClouds.add(clouds);
+                        futureSumClouds += clouds;
+                        futureAverageClouds = futureSumClouds/futureDurationInStrips;
+                        double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureClouds));
+
+                        // WIND
+                        futureWind.add(wind);
+                        futureSumWind += wind;
+                        futureAverageWind = futureSumWind/futureDurationInStrips;
+                        double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
+
+                        writeToExternalFile(getString(R.string.predictionDataFile), day + " " + cityName //// TODO: 14/08/17 DAY!!!
+                                + " " + futureAverageTemp + " " + futureStdDevTemp
+                                + " " + futureAveragePressure + " " + futureStdDevPressure
+                                + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
+                                + " " + futureAverageClouds + " " + futureStdDevClouds
+                                + " " + futureAverageWind + " " + futureStdDevWind + " "
+                                + " " + futureStripId + " " + futureDurationInStrips + " final", true); // TODO: 14/08/17 DURATION IN STRIPS!!
+
                     }
-
-
                 }
-
-                // TEMPERATURE
-                dayTomorrowAverageTemp = dayTomorrowAverageTemp - 273.15; //celsius
-                nightTomorrowAverageTemp = nightTomorrowAverageTemp - 273.15; //celsius
-
-                dayTomorrowAverageTemp = dayTomorrowAverageTemp / nrOfHoursDay; // kelvin
-                nightTomorrowAverageTemp = nightTomorrowAverageTemp / nrOfHoursNight; // kelvin
-
-                double dayTomorrowStdDevTemp = getStdDev(getVariance(dayTomorrowAverageTemp, dayTomorrowTemps));
-                double nightTomorrowStdDevTemp = getStdDev(getVariance(nightTomorrowAverageTemp, nightTomorrowTemps));
-
-                // PRESSURE
-                dayTomorrowAveragePressure = dayTomorrowAveragePressure / nrOfHoursDay;
-                nightTomorrowAveragePressure = nightTomorrowAveragePressure / nrOfHoursNight;
-
-                double dayTomorrowStdDevPressure = getStdDev(getVariance(dayTomorrowAveragePressure, dayTomorrowPressures));
-                double nightTomorrowStdDevPressure = getStdDev(getVariance(nightTomorrowAveragePressure, nightTomorrowPressures));
-
-                // HUMIDITY
-                dayTomorrowAverageHumidity = dayTomorrowAverageHumidity / nrOfHoursDay;
-                nightTomorrowAverageHumidity = nightTomorrowAverageHumidity / nrOfHoursNight;
-
-                double dayTomorrowStdDevHumidity = getStdDev(getVariance(dayTomorrowAverageHumidity, dayTomorrowHumidities));
-                double nightTomorrowStdDevHumidity = getStdDev(getVariance(nightTomorrowAverageHumidity, nightTomorrowHumidities));
-
-                // CLOUDS
-                dayTomorrowAverageClouds = dayTomorrowAverageClouds / nrOfHoursDay;
-                nightTomorrowAverageClouds = nightTomorrowAverageClouds / nrOfHoursNight;
-
-                double dayTomorrowStdDevClouds = getStdDev(getVariance(dayTomorrowAverageClouds, dayTomorrowClouds));
-                double nightTomorrowStdDevClouds = getStdDev(getVariance(nightTomorrowAverageClouds, nightTomorrowClouds));
-
-                // WIND
-                dayTomorrowAverageWind = dayTomorrowAverageWind / nrOfHoursDay;
-                nightTomorrowAverageWind = nightTomorrowAverageWind / nrOfHoursNight;
-
-                double dayTomorrowStdDevWind = getStdDev(getVariance(dayTomorrowAverageWind, dayTomorrowWind));
-                double nightTomorrowStdDevWind = getStdDev(getVariance(nightTomorrowAverageWind, nightTomorrowWind));
 
                 Calendar calendar = GregorianCalendar.getInstance();
                 day = calendar.get(Calendar.DAY_OF_WEEK);
 
 
-                //we calculate averages of the CURRENT night and day
+                //we calculate averages of the CURRENT strips of hours
                 getArrayLists();
 
-                ArrayList<Double> dayTempsArray, dayPressuresArray, dayHumiditiesArray, dayCloudsArray, dayWindArray;
                 // CURRENT TEMP
                 double averageTemp = getAverage(tempsArray);
                 double stdDevTemp = getStdDev(getVariance(averageTemp, tempsArray));
@@ -436,34 +366,14 @@ public class ResponseActivity extends AppCompatActivity {
                 double averageWind = getAverage(windArray);
                 double stdDevWind = getStdDev(getVariance(averageWind, windArray));
 
-                writeToExternalFile(getString(R.string.dataFile), day + " " + gb + " " + location
+                int stripId = hourOfDay/3;
+
+                writeToExternalFile(getString(R.string.currentDataFile), day + " " + gb + " " + cityName
                         + " " + averageTemp + " " + stdDevTemp
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
                         + " " + averageClouds + " " + stdDevClouds
-                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips, true);
-
-                writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb
-                        + " " + nightAverageTemp + " " + nightStdDevTemp
-                        + " " + nightAveragePressure + " " + nightStdDevPressure
-                        + " " + nightAverageHumidity + " " + nightStdDevHumidity
-                        + " " + nightAverageClouds + " " + nightStdDevClouds
-                        + " " + nightAverageWind + " " + nightStdDevWind
-                        + " " + dayAverageTemp + " " + dayStdDevTemp
-                        + " " + dayAveragePressure + " " + dayStdDevPressure
-                        + " " + dayAverageHumidity + " " + dayStdDevHumidity
-                        + " " + dayAverageClouds + " " + dayStdDevClouds
-                        + " " + dayAverageWind + " " + dayStdDevWind
-                        + " " + nightTomorrowAverageTemp + " " + nightTomorrowStdDevTemp
-                        + " " + nightTomorrowAveragePressure + " " + nightTomorrowStdDevPressure
-                        + " " + nightTomorrowAverageHumidity + " " + nightTomorrowStdDevHumidity
-                        + " " + nightTomorrowAverageClouds + " " + nightTomorrowStdDevClouds
-                        + " " + nightTomorrowAverageWind + " " + nightTomorrowStdDevWind
-                        + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDevTemp
-                        + " " + dayTomorrowAveragePressure + " " + dayTomorrowStdDevPressure
-                        + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1. //// TODO: 14/08/17
-                        + " " + dayTomorrowAverageClouds + " " + dayTomorrowStdDevClouds
-                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final");
+                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + " final", true);
             }
         });
         thread.start();
@@ -547,7 +457,7 @@ public class ResponseActivity extends AppCompatActivity {
             System.out.println("message of do in backGROUND" + message[0]);
             if (message[0] == "commit") {
                 try {
-                    mTcpClient.run(readFromExternalFile(getString(R.string.dataFile)));
+                    mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -581,6 +491,8 @@ public class ResponseActivity extends AppCompatActivity {
 
             loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
             loadMessage.setTextSize(40);
+
+            writeToInternalFile(getString(R.string.xsFile), "");
             System.out.println("STOP CLIENT DIN PROGRESS UPDATE");
             mTcpClient.stopClient();
 
@@ -671,6 +583,8 @@ public class ResponseActivity extends AppCompatActivity {
     private void getArrayLists() {
         String currentData = readFromInternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
+
+        durationInStrips = data.length;
 
         tempsArray = new ArrayList<>();
         pressuresArray = new ArrayList<>();
