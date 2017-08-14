@@ -11,8 +11,8 @@ deteB.df$weekDay = as.factor(deteB.df$weekDay) #sa ma informez de as.factor, SA 
 levels(deteB.df$weekDay) <- c("1", "2", "3", "4", "5", "6", "7")
 deteB.df$location = as.factor(deteB.df$location)
 deteB.rpart1 = rpart(gb ~ ., data = as.data.frame(deteB.df), parms=list(split='gini'), control=rpart.control(cp=0.00001, xval=10, maxdepth=15))
-#plot(deteB.rpart1, uniform = TRUE) 
-#text(deteB.rpart1, use.n = TRUE, cex = 0.75)
+plot(deteB.rpart1, uniform = TRUE) 
+text(deteB.rpart1, use.n = TRUE, cex = 0.75)
 #plotcp(dete.rpart1)
 #printcp(dete.rpart1)
 #dete.rpart1
@@ -25,8 +25,8 @@ deteB.rpart2 = prune(deteB.rpart1, cp = cpPrune)
 #dete.rpart2
 #plotcp(dete.rpart2)
 #printcp(dete.rpart2)
-#plot(deteB.rpart2, uniform = TRUE)
-#text(deteB.rpart2, use.n = TRUE, cex = 0.75)
+plot(deteB.rpart2, uniform = TRUE)
+text(deteB.rpart2, use.n = TRUE, cex = 0.75)
 
 #predict using decision trees
 
@@ -38,7 +38,7 @@ deteC.df$weekDay = as.factor(deteC.df$weekDay)
 deteC.df$location = as.factor(deteC.df$location)
 
 result <- predict(deteB.rpart2, deteC.df, type = "matrix", na.action = na.pass) #we are predicting for multiple individuals
-#result
+result
 cat("Your day will be good with a percentage of ", result) #result[1, 2]*100
 
 #uitate pe pagina asta web:

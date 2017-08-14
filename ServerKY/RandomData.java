@@ -1,4 +1,5 @@
 import java.util.*;
+import java.lang.Math.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.ThreadLocalRandom;
@@ -7,6 +8,8 @@ import java.io.IOException;
 
 public class RandomData {
 	public static void main(String[] args) {
+		int numSpecialStripesType1 = 0;
+		int numSpecialStripesType2 = 0;
 		//training strips (50 of them)
 		PrintWriter writer = null;
 		try{
@@ -19,7 +22,6 @@ public class RandomData {
 			int stripId = i%8;
 			int day = 1 + i/8;
 			int durationInStrips = ThreadLocalRandom.current().nextInt(1, 3);
-			int gb = ThreadLocalRandom.current().nextInt(0, 100);
 			int location = ThreadLocalRandom.current().nextInt(0, 50);
 			locations.add(location);
 
@@ -37,6 +39,15 @@ public class RandomData {
 
 			Double averageWind = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
 			Double stdDevWind = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+
+			int gb = ThreadLocalRandom.current().nextInt(0, 100);
+ 			if (averageHumidity < 20) {
+				gb = (int)(70.0 - stdDevClouds + averageWind);
+				numSpecialStripesType1++;
+			} else if (stdDevTemp > 3) {
+				gb = (int)(20); //the humidity can at most decrease well being at most with 30
+				numSpecialStripesType2++;
+			}
 
 			writer.println(day + " " + gb + " " + location
 					   + " " + averageTemp + " " + stdDevTemp
@@ -86,5 +97,6 @@ public class RandomData {
                       			   + " " + stripId + " " + durationInStrips);
 		}
 		writer.close();
+		System.out.println("The number of individuals type1 is " + numSpecialStripesType1 + " and the number of individuals type2 is " + numSpecialStripesType2);
 	}
 }
