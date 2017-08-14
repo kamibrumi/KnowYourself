@@ -48,8 +48,6 @@ public class ResponseActivity extends AppCompatActivity {
     //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
     private String URL;
     String gb;
-    private final static String serverIP = "192.168.1.225";
-    private final static int serverPort = 55160;
     private TCPClient mTcpClient;
     TextView serverResponse;
     TextView loadMessage, dayTv;

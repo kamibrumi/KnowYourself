@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 
 public class CurrentWeatherIntentService extends IntentService{
     private String URL;
-    int dayOfMonth, month, minute, hour, startHour;
     String cityFile;
 
     public CurrentWeatherIntentService() {
@@ -49,14 +48,6 @@ public class CurrentWeatherIntentService extends IntentService{
             lon = Double.parseDouble(idll[2]);
 
             URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lat + "&lon=" + lon + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
-
-            System.out.println(URL);
-            Calendar calendar = GregorianCalendar.getInstance();
-            minute = calendar.get(Calendar.MINUTE);
-            hour = calendar.get(Calendar.HOUR_OF_DAY);
-            dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-            month = calendar.get(Calendar.MONTH);
-            startHour = this.getResources().getInteger(R.integer.startHour);
 
             //System.out.println("am facut calendarul");
             String weatherData = "";
@@ -92,44 +83,21 @@ public class CurrentWeatherIntentService extends IntentService{
                 e.printStackTrace();
             }
 
-            String currentDateId = String.valueOf(dayOfMonth) + String.valueOf(month); //we use it to overwrite yesterday's currentWeather file (see writeToFile method)
             currentTemp = currentTemp - 273.15; //in celsius
 
-            String fileName = "";
-            if (hour <= 8) fileName = "nightCurrentWeather.txt";
-            else if (hour >= 9) fileName = "dayCurrentWeather.txt";
-
-            String fileContent = null;
-            try {
-                fileContent = readFromFile(fileName, this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            // TODO: 31/07/17 daca modifici datele de la writeFile de la if, modificale si de la else!!!!!!!!!!!!!!
-            if (fileContent == null) writeToFile(fileName,currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this, false, ""); //we converted kelvin to celsius
-            else {
-                //we'll obtain just the first word of the string because we want to avoid the case that a temperature contains the currentDateId. this wold leave to wrong results.
-                String arr[] = fileContent.split(" ", 2);
-                String currentDate = arr[0];
-                writeToFile(fileName, currentDateId + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this, true, currentDate); //we converted kelvin to celsius
-            }
-            try {
-                System.out.println("fisierul de current weather din intent: " + readFromFile(fileName, this));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            //System.out.println("s-a terminat intentul");
+            writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius   //System.out.println("s-a terminat intentul");
+        }
+        try {
+            System.out.println("current weather= " + readFromFile(getString(R.string.xsFile), this));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         System.out.println("CURRENT WEATHER INTENT FIN");
     }
 
-    private void writeToFile(String fileName, String data, Context context, boolean isContent, String currentDate) {
+    private void writeToFile(String fileName, String data, Context context) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));;
-            String currentDateId = String.valueOf(dayOfMonth) + String.valueOf(month);
-            if (!isContent || !currentDate.contains(currentDateId)) {
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-            }
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
@@ -137,40 +105,6 @@ public class CurrentWeatherIntentService extends IntentService{
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
-/*
-    private void writeToFile(String data, Context context) throws IOException {
-        String currentDateId = String.valueOf(dayOfMonth) + String.valueOf(month);
-        String fileName = "";
-
-        if (hour <= 8) fileName = "nightCurrentWeather.txt";
-        else if (hour >= 9) fileName = "dayCurrentWeather.txt";
-
-        String fileContent = readFromFile(fileName, this);
-        System.out.println("AM PUTUT CITI DIN FISIERUL NIGHT/DAY CURRENT WEATHER");
-
-        //we'll obtain just the first word of the string because we want to avoid the case that a temperature contains the currentDateId. this wold leave to wrong results.
-        String arr[] = fileContent.split(" ", 2);
-        String currentDate = arr[0];
-        System.out.println("CURRENT DATE IS: " + currentDate);
-        System.out.println("CURRENT DATE ID IS: " + currentDateId);
-
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
-            System.out.println("Reusim sa cream outputstreamwriter MODE APPEND");
-            if (!currentDate.contains(currentDateId)) {
-                outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-                System.out.println("OUTPUT STREAM WRITER MODE PRIVATE");
-            }
-
-            outputStreamWriter.write(" " + data + '\n');
-            System.out.println("AM REUSIT SA SCRIEM");
-            outputStreamWriter.close();
-            System.out.println("AM INCHIS OUTPUTSTREAMWRITER");
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    } */
 
     private String readFromFile(String filename, Context context) throws IOException {
 
