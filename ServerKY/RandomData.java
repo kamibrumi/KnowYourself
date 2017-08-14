@@ -57,28 +57,28 @@ public class RandomData {
 			int durationInStrips = ThreadLocalRandom.current().nextInt(1, 3);
 			int location = ThreadLocalRandom.current().nextInt(0, 50);
 
-			Double tomorrowAverageTemp = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
-			Double tomorrowStdDevTemp = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+			Double futureAverageTemp = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
+			Double futureStdDevTemp = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
-			Double tomorrowAveragePressure = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
-			Double tomorrowStdDevPressure = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+			Double futureAveragePressure = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
+			Double futureStdDevPressure = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
-			Double tomorrowAverageHumidity = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
-			Double tomorrowStdDevHumidity = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+			Double futureAverageHumidity = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
+			Double futureStdDevHumidity = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
-			Double tomorrowAverageClouds = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
-			Double tomorrowStdDevClouds = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+			Double futureAverageClouds = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
+			Double futureStdDevClouds = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
-			Double tomorrowAverageWind = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
-			Double tomorrowStdDevWind = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
+			Double futureAverageWind = ThreadLocalRandom.current().nextDouble(10, 30 + 1);
+			Double futureStdDevWind = ThreadLocalRandom.current().nextDouble(0.5, 5. + 1);
 
 
 			writer.println(day + " " + location 
-					   + " " + tomorrowAverageTemp + " " + tomorrowStdDevTemp
-					   + " " + tomorrowAveragePressure + " " + tomorrowStdDevPressure
-					   + " " + tomorrowAverageHumidity + " " + tomorrowStdDevHumidity
-					   + " " + tomorrowAverageClouds + " " + tomorrowStdDevClouds
-					   + " " + tomorrowAverageWind + " " + tomorrowStdDevWind + " "
+					   + " " + futureAverageTemp + " " + futureStdDevTemp
+					   + " " + futureAveragePressure + " " + futureStdDevPressure
+					   + " " + futureAverageHumidity + " " + futureStdDevHumidity
+					   + " " + futureAverageClouds + " " + futureStdDevClouds
+					   + " " + futureAverageWind + " " + futureStdDevWind + " "
                       			   + " " + stripId + " " + durationInStrips);
 		}
 		writer.close();
