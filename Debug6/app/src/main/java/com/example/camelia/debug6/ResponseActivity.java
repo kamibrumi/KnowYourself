@@ -49,7 +49,6 @@ public class ResponseActivity extends AppCompatActivity {
     private String URL;
     String gb;
     private TCPClient mTcpClient;
-    TextView serverResponse;
     TextView loadMessage, dayTv;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
@@ -414,95 +413,35 @@ public class ResponseActivity extends AppCompatActivity {
 
 
                 //we calculate averages of the CURRENT night and day
-                getArrayLists("dayCurrentWeather.txt");
+                getArrayLists();
 
                 ArrayList<Double> dayTempsArray, dayPressuresArray, dayHumiditiesArray, dayCloudsArray, dayWindArray;
                 // CURRENT TEMP
-                dayTempsArray = tempsArray;
-                double dayAverageTemp = getAverage(dayTempsArray);
-                double dayStdDevTemp = getStdDev(getVariance(dayAverageTemp, dayTempsArray));
+                double averageTemp = getAverage(tempsArray);
+                double stdDevTemp = getStdDev(getVariance(averageTemp, tempsArray));
 
                 // CURRENT PRESSURE
-                dayPressuresArray = pressuresArray;
-                double dayAveragePressure = getAverage(dayPressuresArray);
-                double dayStdDevPressure = getStdDev(getVariance(dayAveragePressure, dayPressuresArray));
+                double averagePressure = getAverage(pressuresArray);
+                double stdDevPressure = getStdDev(getVariance(averagePressure, pressuresArray));
 
                 // CURRENT HUMIDITY
-                dayHumiditiesArray = humiditiesArray;
-                double dayAverageHumidity = getAverage(dayHumiditiesArray);
-                double dayStdDevHumidity = getStdDev(getVariance(dayAverageHumidity, dayHumiditiesArray));
+                double averageHumidity = getAverage(humiditiesArray);
+                double stdDevHumidity = getStdDev(getVariance(averageHumidity, humiditiesArray));
 
                 // CURRENT CLOUDS
-                dayCloudsArray = cloudsArray;
-                double dayAverageClouds = getAverage(dayCloudsArray);
-                double dayStdDevClouds = getStdDev(getVariance(dayAverageClouds, dayCloudsArray));
+                double averageClouds = getAverage(cloudsArray);
+                double stdDevClouds = getStdDev(getVariance(averageClouds, cloudsArray));
 
                 // CURRENT WIND
-                dayWindArray = windArray;
-                double dayAverageWind = getAverage(dayWindArray);
-                double dayStdDevWind = getStdDev(getVariance(dayAverageWind, dayWindArray));
+                double averageWind = getAverage(windArray);
+                double stdDevWind = getStdDev(getVariance(averageWind, windArray));
 
-
-                String fileContent_nightCurrentT = readFromInternalFile("nightCurrentWeather.txt");
-                //System.out.println("FILE CONTENT " + fileContent_nightCurrentT);
-                ArrayList<Double> nightTempsArray, nightPressuresArray, nightHumiditiesArray, nightCloudsArray, nightWindArray;
-                double nightAverageTemp, nightStdDevTemp, nightAveragePressure, nightStdDevPressure, nightAverageHumidity, nightStdDevHumidity, nightAverageClouds, nightStdDevClouds, nightAverageWind, nightStdDevWind;
-                if (fileContent_nightCurrentT == null || fileContent_nightCurrentT == "") {
-                    nightTempsArray = dayTempsArray;
-                    nightPressuresArray = dayPressuresArray;
-                    nightHumiditiesArray = dayHumiditiesArray;
-                    nightCloudsArray = dayCloudsArray;
-                    nightWindArray = dayWindArray;
-                    System.out.println("FILE CONTENT IS NULL OR VOID");
-                }
-                else {
-                    getArrayLists("nightCurrentWeather.txt");
-                    nightTempsArray = tempsArray;
-                    nightPressuresArray = pressuresArray;
-                    nightHumiditiesArray = humiditiesArray;
-                    nightCloudsArray = cloudsArray;
-                    nightWindArray = windArray;
-                }
-
-                // TEMPERATURE
-                nightAverageTemp = getAverage(nightTempsArray);
-                nightStdDevTemp = getStdDev(getVariance(nightAverageTemp, nightTempsArray));
-
-                // PRESSURE
-                nightAveragePressure = getAverage(nightPressuresArray);
-                nightStdDevPressure = getStdDev(getVariance(nightAveragePressure, nightPressuresArray));
-
-                // HUMIDITY
-                nightAverageHumidity = getAverage(nightHumiditiesArray);
-                nightStdDevHumidity = getStdDev(getVariance(nightAverageHumidity, nightHumiditiesArray));
-
-                // CLOUDS
-                nightAverageClouds = getAverage(nightCloudsArray);
-                nightStdDevClouds = getStdDev(getVariance(nightAverageClouds, nightCloudsArray));
-
-                // WIND
-                nightAverageWind = getAverage(nightWindArray);
-                nightStdDevWind = getStdDev(getVariance(nightAverageWind, nightWindArray));
-
-                String predictionDay = readFromInternalFile(getString(R.string.predictionDayFile));
-                System.out.println("CONTINUTUL FILE PREDICTIONdAY: " + predictionDay);
-
-
-                //we look wether the user answered today already. If the answer is yes, then we overwrite the last line of the data file.
-                if (predictionDay == dayOfMonth + "-" + month + "-" + year) {
-                    String dataFileContent = null;
-                    try {
-                        dataFileContent = readFromExternalFile(getString(R.string.dataFile));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    String newDataFileContent = "";
-                    String[] data = dataFileContent.split(" final");
-                    for (int i = 0; i < data.length - 1; ++i) {
-                        newDataFileContent = newDataFileContent + data[i] + " final";
-                    }
-                    writeToExternalFile(getString(R.string.dataFile), newDataFileContent, false);
-                }
+                writeToExternalFile(getString(R.string.dataFile), day + " " + gb + " " + location
+                        + " " + averageTemp + " " + stdDevTemp
+                        + " " + averagePressure + " " + stdDevPressure
+                        + " " + averageHumidity + " " + stdDevHumidity
+                        + " " + averageClouds + " " + stdDevClouds
+                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips, true);
 
                 writeToExternalFile(getString(R.string.dataFile), day + " " + cityName + " " + gb
                         + " " + nightAverageTemp + " " + nightStdDevTemp
@@ -522,9 +461,9 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + nightTomorrowAverageWind + " " + nightTomorrowStdDevWind
                         + " " + dayTomorrowAverageTemp + " " + dayTomorrowStdDevTemp
                         + " " + dayTomorrowAveragePressure + " " + dayTomorrowStdDevPressure
-                        + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1.
+                        + " " + dayTomorrowAverageHumidity * 1. + " " + dayTomorrowStdDevHumidity * 1. //// TODO: 14/08/17
                         + " " + dayTomorrowAverageClouds + " " + dayTomorrowStdDevClouds
-                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final", true);
+                        + " " + dayTomorrowAverageWind + " " + dayTomorrowStdDevWind + " final");
             }
         });
         thread.start();
@@ -568,7 +507,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         File file = new File (myDir, filename);
         try {
-            FileOutputStream fos = new FileOutputStream(file, append);
+            FileOutputStream fos = new FileOutputStream(file, append); //true because we append
             byte[] strb = data.getBytes();
             for(int i = 0; i < strb.length; ++i) {
                 fos.write(strb[i]);
@@ -729,8 +668,8 @@ public class ResponseActivity extends AppCompatActivity {
         return ret;
     }
 
-    private void getArrayLists(String filename) {
-        String currentData = readFromInternalFile(filename);
+    private void getArrayLists() {
+        String currentData = readFromInternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
 
         tempsArray = new ArrayList<>();
@@ -740,11 +679,11 @@ public class ResponseActivity extends AppCompatActivity {
         windArray = new ArrayList<>();
         for (int i = 0; i < data.length; ++i) {
             String[] sarr = data[i].split(" ");
-            tempsArray.add(Double.parseDouble(sarr[1]));
-            pressuresArray.add(Double.parseDouble(sarr[2]));
-            humiditiesArray.add(Double.parseDouble(sarr[3]));
-            cloudsArray.add(Double.parseDouble(sarr[4]));
-            windArray.add(Double.parseDouble(sarr[5]));
+            tempsArray.add(Double.parseDouble(sarr[0]));
+            pressuresArray.add(Double.parseDouble(sarr[1]));
+            humiditiesArray.add(Double.parseDouble(sarr[2]));
+            cloudsArray.add(Double.parseDouble(sarr[3]));
+            windArray.add(Double.parseDouble(sarr[4]));
         }
     }
 
