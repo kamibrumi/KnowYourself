@@ -59,7 +59,7 @@ public class ResponseActivity extends AppCompatActivity {
     long cityId;
     String cityName;
     boolean isFromMain;
-    int day, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
+    int dayOfWeek, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
 
 
     @Override
@@ -86,6 +86,8 @@ public class ResponseActivity extends AppCompatActivity {
         month = calendar.get(Calendar.MONTH);
         year = calendar.get(Calendar.YEAR);
         hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+        dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+
 
         //we cancel the notification
         NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
@@ -266,15 +268,31 @@ public class ResponseActivity extends AppCompatActivity {
                 ArrayList<Double> futureWind = new ArrayList<Double>();
 
                 for (int i = 0; i < 24; i++) {
-                    String dt_compare = null;
+                    String dt = null;
                     try {
-                        dt_compare = arr.getJSONObject(i).getString("dt_txt");
+                        dt = arr.getJSONObject(i).getString("dt_txt");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
 
+                    Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*");
+                    Matcher m = p.matcher(dt);
+                    int predictionDayOfWeek = 0;
+                    if(m.find()) {
+                        String date = m.group();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        Calendar c = Calendar.getInstance();
+                        try {
+                            c.setTime(sdf.parse(date));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+                        predictionDayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+                    }
+
                     Pattern hourP = Pattern.compile("[0-9]*:[0-9]*:[0-9]*");
-                    Matcher hourM = hourP.matcher(dt_compare);
+                    Matcher hourM = hourP.matcher(dt);
                     if (hourM.find()) {
                         //System.out.println("ORA: " + hourM.group());
                         int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
@@ -328,7 +346,7 @@ public class ResponseActivity extends AppCompatActivity {
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
 
-                        writeToExternalFile(getString(R.string.predictionDataFile), day + " " + cityName //// TODO: 14/08/17 DAY!!!
+                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + cityName //// TODO: 14/08/17 DAY!!!
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
@@ -339,8 +357,6 @@ public class ResponseActivity extends AppCompatActivity {
                     }
                 }
 
-                Calendar calendar = GregorianCalendar.getInstance();
-                day = calendar.get(Calendar.DAY_OF_WEEK);
 
 
                 //we calculate averages of the CURRENT strips of hours
@@ -368,7 +384,7 @@ public class ResponseActivity extends AppCompatActivity {
 
                 int stripId = hourOfDay/3;
 
-                writeToExternalFile(getString(R.string.currentDataFile), day + " " + gb + " " + cityName
+                writeToExternalFile(getString(R.string.currentDataFile), dayOfWeek + " " + gb + " " + cityName
                         + " " + averageTemp + " " + stdDevTemp
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
