@@ -15,9 +15,11 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     String idll;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,20 +57,14 @@ public class MainActivity extends AppCompatActivity {
         commitB = (Button) findViewById(R.id.commit);
         pB = (ProgressBar) findViewById(R.id.progressBar);
         System.out.println(String.valueOf(isMyServiceRunning()));
+        writeToExternalFile(getString(R.string.idLatLonFile), "", false);
 
-        if (idll == "" || idll == null) {
-            isLocation();
-        }
-
-        if (!isMyServiceRunning()) {
-            //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-            final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-            final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                    (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
-        }
+        final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+        final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager1.getNextAlarmClock() == null) System.out.println("ALARMA NU A MAI FOST SETATA NICIODATA!!");
+        isLocation();
     }
 
     @Override
@@ -168,45 +165,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void commit(View view) {
         String xsContent = readFromInternalFile(getString(R.string.xsFile));
-        if(xsContent == "" || xsContent == null) {
+        if (xsContent == "" || xsContent == null) {
             Toast toast = Toast.makeText(getApplicationContext(), "Still collecting weather data...", Toast.LENGTH_SHORT);
             toast.show();
-        }else {
+        } else {
             if (isNetworkAvailable()) {
                 if (isLocation()) {
-                    writeToInternalFile(getString(R.string.isFromMain), "true", this);
+                    writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
                     int howWasYourDay = pB.getProgress();
                     System.out.println("how was my day------------> " + howWasYourDay);
                     Intent intent = new Intent(this, ResponseActivity.class);
                     intent.putExtra("how", String.valueOf(howWasYourDay));
                     startActivity(intent);
                 } else {
-                    AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                    dialog.setMessage("Enable your location for a while, pls.");
-                    dialog.setTitle("Location Needed");
-                    dialog.setCancelable(false);
-                    dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                            // TODO Auto-generated method stub
-                            Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(myIntent);
-                            //get gps
-                        }
-                    });
-                    dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-                        @Override
-                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                            // TODO Auto-generated method stub
-
-                        }
-                    });
-                    dialog.show();
+                    Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
+                    toast.show();
                 }
-            } else {
-                Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
-                toast.show();
             }
         }
     }
@@ -258,14 +232,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean isLocation(){
+        System.out.println("A INTRAT IN ISLOCATION");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //boolean gps_enabled = false;
         //boolean network_enabled = false;
 
         // Define a listener that responds to location updates
         LocationListener locationListener = new LocationListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
+                System.out.println("A DOUA OARA??????????????");
+                writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
+                try {
+                    if (readFromExternalFile(getString(R.string.idLatLonFile)) == "") isLocation();
+                    else {
+                        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                        final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                        final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                        if (alarmManager1.getNextAlarmClock() == null) {
+                            System.out.println("AM LANSAT ALARMAAAAAAAAAAAA");
+                            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
+                        }
+                        locationManager.removeUpdates(this);
+                        // TODO: 15/08/17 opreste locatiaaaaa 
+                        // TODO: 15/08/17 sterge is location din response activity!!! 
+                        // TODO: 15/08/17 se executa a doua oara inainte de prima oara!! 
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -308,13 +308,35 @@ public class MainActivity extends AppCompatActivity {
 
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
+                    System.out.println("PRIMA OARA??????????");
 
                 }
-                writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
-
                 return true;
             }
 
+        } else {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setMessage("Enable your location for a while, pls.");
+            dialog.setTitle("Location Needed");
+            dialog.setCancelable(false);
+            dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                    Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(myIntent);
+                    //get gps
+                }
+            });
+            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+
+                }
+            });
+            dialog.show();
         }
         return false;
     }
