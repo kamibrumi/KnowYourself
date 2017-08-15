@@ -43,6 +43,10 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import smile.data.parser.DelimitedTextParser;
+import smile.data.*;
+import java.io.ByteArrayInputStream;
+import smile.regression.RegressionTree;
 
 public class ResponseActivity extends AppCompatActivity {
     //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
@@ -304,7 +308,8 @@ public class ResponseActivity extends AppCompatActivity {
 
                         Boolean append = true;
                         if ( i == 0) append = false;
-                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + cityName
+                        //writting state of the day: 0 given that the crappy library asks for this data
+                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + 0 + " " + cityName
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
@@ -347,7 +352,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
                         + " " + averageClouds + " " + stdDevClouds
-                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + " final", false); // TODO: 15/08/17 true!! 
+                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + System.getProperty("line.separator"), false); // TODO: 15/08/17 true!!
             }
         });
         thread.start();
@@ -414,7 +419,65 @@ public class ResponseActivity extends AppCompatActivity {
         }
     }
 
-    public class connectTask extends AsyncTask<String,String,TCPClient> {
+
+        public class LocalModelTask extends AsyncTask<Void,Void,String> {
+
+            @Override
+            protected String doInBackground(Void... voids) {
+                DelimitedTextParser parser = new DelimitedTextParser();
+                parser.setResponseIndex(new NumericAttribute("gb"), 1); //the second attr is the gb
+                String trainingData, testData;
+                trainingData = testData = null;
+                try {
+                    int numberOfVariables = getApplicationContext().getResources().getInteger(R.integer.numberOfVariables);
+                    Attribute[] attributes = new Attribute[numberOfVariables];
+                    String[] attributesArray = {"day", "goodBad", "loc", "avgTemp", "stdDevTemp", "avgPres", "stdDevPres",
+                            "avgHumid", "stdDevHumid", "avgClouds", "stdDevClouds", "avgWind", "stdDevWind", "stripId",
+                            "durationInStrips"};
+                    for (int i = 0; i < numberOfVariables; ++i) {
+                        if (i <= 2) //the first three attributes are the only nominal
+                            attributes[i] = new NominalAttribute(attributesArray[i]);
+                        else
+                            attributes[i] = new NumericAttribute(attributesArray[i]);
+                    }
+                    //I have verified in the code that the parse() routine explicitly avoids
+                    //the column containing the prediction variable. This holds in the following
+                    //two lines both for train as for test
+                    AttributeDataset train = parser.parse("TrainingData", attributes, new File("R.string.currentDataFile"));
+                    AttributeDataset test = parser.parse("TestData", attributes, new File("R.string.predictionDataFile"));
+                    double[][] x = train.toArray(new double[train.size()][]);
+                    int[] y = train.toArray(new int[train.size()]);
+                    double[][] testx = test.toArray(new double[test.size()][]);
+                    int[] testy = test.toArray(new int[test.size()]);
+                    const int maxNodes = 100;
+                    RegressionTree<double[]> tree = new RegressionTree<double[]>(x, y, 100);
+                    int error = 0;
+                    for (int i = 0; i < testx.length; i++) {
+                        System.out.println(RegressionTree.predict(testx)); // the value of the prediction
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+            //trainingData = readFromExternalFile(getString(R.string.currentDataFile));
+            //testData =  readFromExternalFile(getString(R.string.predictionDataFile));
+            //InputStream trainStream = new ByteArrayInputStream(trainingData.getBytes());
+            //InputStream testStream = new ByteArrayInputStream(testData.getBytes());
+
+            protected void onPostExecute(String result) { //you receive the result as a parameter
+                System.out.println("Prediction done locally on the mobile with result");
+                System.out.println(result);
+            }
+
+
+
+        }
+
+
+        public class connectTask extends AsyncTask<String,String,TCPClient> {
+
 
         @Override
         protected TCPClient doInBackground(String... message) {
