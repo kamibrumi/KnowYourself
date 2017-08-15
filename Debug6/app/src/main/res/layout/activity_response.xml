@@ -13,7 +13,6 @@
         android:layout_centerHorizontal="true"
         android:layout_above="@+id/loadMessage"
         android:id="@+id/dayTv"
-        android:text="Tomorrow will be"
         android:visibility="gone"/>
 
     <TextView
@@ -32,6 +31,17 @@
         android:layout_height="200dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"/>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/afterLoadingTV"/>
+
+    </HorizontalScrollView>
 
 
     <!--

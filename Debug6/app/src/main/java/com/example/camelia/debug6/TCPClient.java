@@ -45,7 +45,6 @@ public class TCPClient {
 
     public void stopClient(){
         mRun = false;
-        System.out.println("WE STOPPED THE CLIENT FROM TCPCLIENT");
     }
 
     public void run(String msg) {
@@ -59,9 +58,7 @@ public class TCPClient {
             Log.e("TCP Client", "C: Connecting...");
             //System.out.println("WE SENT LOG TO SERVER CONNECTING");
             //create a socket to make the connection with the server
-            System.out.println("inainte de crearea socketului");
             Socket socket = new Socket(serverAddr, SERVERPORT);
-            System.out.println("dupa crearea socketului");
             try {
 
                 //send the message to the server
@@ -86,7 +83,6 @@ public class TCPClient {
                     serverMessage = null;
                     mRun = false;
                 }
-                System.out.println("THE MRUN VALUE IS " + mRun);
 
                 Log.e("RESPONSE FROM SERVER", "S: Received Message: '" + serverMessage + "'");
 
@@ -97,10 +93,7 @@ public class TCPClient {
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
-                sendMessage("quit");
-                System.out.println("AM TRIMIS MESAJUL QUIT");
                 socket.close();
-                System.out.println("WE CLOSED THE SOCKET");
             }
 
         } catch (Exception e) {

@@ -98,7 +98,7 @@ public class CurrentWeatherIntentService extends IntentService{
 
     private void writeToFile(String fileName, String data, Context context) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE)); // TODO: 15/08/17 mode append!!
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }

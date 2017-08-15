@@ -15,7 +15,13 @@ public class TCPServerSend extends Thread {
     static  String Ranswer;
 
     public static void main(String[] args) {
-	Ranswer = args[args.length - 1];
+	Ranswer = "";
+	for (int i = 0; i < args.length - 1; ++i) {
+		Ranswer = Ranswer + args[i] + " ";
+		//System.out.println("ARGS " + i + " = " + args[i]);	
+	}
+	Ranswer = Ranswer + args[args.length - 1];
+	System.out.println(Ranswer);
 	//we start the server
         TCPServerSend mServer = new TCPServerSend(new TCPServerSend.OnMessageReceived() {
                     @Override
@@ -45,11 +51,8 @@ public class TCPServerSend extends Thread {
      */
     public void sendMessage(String message){
         if (mOut != null && !mOut.checkError()) {
-	    System.out.println("mout in not null and it doesn't give error");
             mOut.println(message);
-	    System.out.println("message : " + message);
             mOut.flush();
-	    System.out.println("flushed!");
         }
     }
 

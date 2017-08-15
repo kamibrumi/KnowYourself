@@ -49,7 +49,7 @@ public class ResponseActivity extends AppCompatActivity {
     private String URL;
     String gb;
     private TCPClient mTcpClient;
-    TextView loadMessage, dayTv;
+    TextView loadMessage, dayTv, afterLoadingTV;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
     boolean isNetworkEnabled = false;
@@ -67,6 +67,7 @@ public class ResponseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_response);
         loadMessage = (TextView) findViewById(R.id.loadMessage);
+        afterLoadingTV = (TextView) findViewById(R.id.afterLoadingTV);
         loading = (ProgressBar) findViewById(R.id.loading);
         dayTv = (TextView) findViewById(R.id.dayTv);
 
@@ -97,21 +98,29 @@ public class ResponseActivity extends AppCompatActivity {
         writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
         System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
-        if (!isFromMain) { //// TODO: 14/08/17 if(xsFile is empty) --> arata continutul la prediction file... Astept sa imi deie Iuli formatul la raspunsul ca sa bag in listView.
-
-            dayTv.setText("Tomorrow will be");
-            dayTv.setVisibility(View.VISIBLE);
-            loading.setVisibility(View.GONE);
+        if (readFromInternalFile(getString(R.string.xsFile)) == "") { //// TODO: 14/08/17 if(xsFile is empty) --> arata continutul la prediction file... Astept sa imi deie Iuli formatul la raspunsul ca sa bag in listView.
             String prediction = readFromInternalFile(getString(R.string.predictionFile));
-            String[] dayAndPrediction = prediction.split(" ");
-            Double percentage = Double.parseDouble(dayAndPrediction[1]);
-            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-            loadMessage.setTextSize(40);
+
+            if(prediction == "" || prediction == null) {
+                loadMessage.setText("Not sufficient data.");
+                loading.setVisibility(View.GONE);
+            } else {
+                //dayTv.setText(prediction);
+                //dayTv.setVisibility(View.VISIBLE);
+                loading.setVisibility(View.GONE);
+
+                //String[] dayAndPrediction = prediction.split(" ");
+                //Double percentage = Double.parseDouble(dayAndPrediction[1]);
+                //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+                loadMessage.setVisibility(View.GONE);
+                afterLoadingTV.setText(prediction);
+                loadMessage.setTextSize(40);
+            }
 
         }
         else {
             // Acquire a reference to the syfalsestem Location Manager
-            LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            final LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             System.out.println("LOCATION MANAGER DECLARED");
             // Define a listener that responds to location updates
             LocationListener locationListener = new LocationListener() {
@@ -119,6 +128,7 @@ public class ResponseActivity extends AppCompatActivity {
                     // Called when a new location is found by the network location provider.
                     System.out.println("ON LOCATION CHANGED");
                     writeDataAndPredict();
+                    locationManager.removeUpdates(this);
                 }
 
                 public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -404,6 +414,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         // connect to the server
         new connectTask().execute("commit");
+
         System.out.println("FIRST COMMIT");
         new java.util.Timer().schedule(
                 new java.util.TimerTask() {
@@ -412,7 +423,6 @@ public class ResponseActivity extends AppCompatActivity {
                         mTcpClient.stopClient();
                         // connect to the server
                         new connectTask().execute("predict");
-                        System.out.println("PREDICT???");
                     }
                 },
                 5000
@@ -476,7 +486,7 @@ public class ResponseActivity extends AppCompatActivity {
             if (message[0] == "commit") {
                 try {
                     mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)) + "SPLIT" + readFromExternalFile(getString(R.string.predictionDataFile)));
-                    System.out.println("CURRENT WEATHER FILE: " + readFromExternalFile(getString(R.string.currentDataFile)));
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -493,22 +503,20 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            if (values[0] != null) writeToInternalFile(getString(R.string.predictionFile),String.valueOf(dayOfMonth) + " " + values[0]);
+            if (values[0] != null) writeToInternalFile(getString(R.string.predictionFile),values[0]); //String.valueOf(dayOfMonth) + " " +
             writeToInternalFile(getString(R.string.predictionDayFile), dayOfMonth + "-" + month + "-" + year);
-            System.out.println("on progress update SE EXECUTA CODUL ASTA!!");
 
-            dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17  
+            //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
 
             System.out.println("DESPUES DE SET TEXT");
-            dayTv.setVisibility(View.VISIBLE);
+            //dayTv.setVisibility(View.VISIBLE);
             loading.setVisibility(View.GONE);
 
             String prediction = readFromInternalFile(getString(R.string.predictionFile));
-            String[] dayAndPrediction = prediction.split(" ");
-            Double percentage = Double.parseDouble(dayAndPrediction[1]);
-            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-
-            loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+            //String[] dayAndPrediction = prediction.split(" ");
+            //Double percentage = Double.parseDouble(dayAndPrediction[1]); //// TODO: 15/08/17 some error:  java.lang.NumberFormatException: Invalid double: "null"
+            //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+            loadMessage.setText(prediction);
             loadMessage.setTextSize(40);
 
             System.out.println("STOP CLIENT DIN PROGRESS UPDATE");

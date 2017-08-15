@@ -2,6 +2,7 @@ package com.example.camelia.debug6;
 
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -278,6 +279,16 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
 
+        }
+        return false;
+    }
+
+    private boolean isMyServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.example.MyService".equals(service.service.getClassName())) {
+                return true;
+            }
         }
         return false;
     }

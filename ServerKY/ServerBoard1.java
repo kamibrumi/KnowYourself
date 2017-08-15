@@ -52,11 +52,9 @@ public class ServerBoard1 {
 						FileWriter fwCurrent = null;
 						BufferedWriter bwFuture = null;
 						FileWriter fwFuture = null;
-						System.out.println(message);
 
 						
-						if (message != "quit") {
-							/*int varPerField = 5 * 8; // number of vars * number of fields
+						/*int varPerField = 5 * 8; // number of vars * number of fields
 							String patt = "[1-9] [a-zA-Z]*";
 							String copyPatt = " [-+]?[0-9]*\\.[0-9]*";
 							for (int i = 0; i < varPerField; ++i) {
@@ -64,9 +62,6 @@ public class ServerBoard1 {
 							} */
 							String[] currentAndFutureFiles = message.split("SPLIT");
 							System.out.println("SPLIT in (# parti): " + currentAndFutureFiles.length);
-
-							System.out.println("current==== " + currentAndFutureFiles[0]);
-							System.out.println("future==== " + currentAndFutureFiles[1]);
 
 							String[] current = currentAndFutureFiles[0].split(" final");
 							String[] future = currentAndFutureFiles[1].split(" final");
@@ -128,7 +123,6 @@ public class ServerBoard1 {
 								}
 
 							}
-						}
 
 					
                     }
