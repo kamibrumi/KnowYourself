@@ -122,7 +122,13 @@ public class ResponseActivity extends AppCompatActivity {
         }
     }
 
-
+    private int computeHash(String myString) {
+        int hash = 7;
+        for (int i = 0; i < myString.length(); i++) {
+            hash = hash*31 + myString.charAt(i);
+        }
+        return hash;
+    }
 
     public void writeDataAndPredict() {
 
@@ -347,12 +353,15 @@ public class ResponseActivity extends AppCompatActivity {
 
                 int stripId = hourOfDay/3;
 
-                writeToExternalFile(getString(R.string.currentDataFile), dayOfWeek + " " + gb + " " + cityName
+                writeToExternalFile(getString(R.string.currentDataFile),
+                        dayOfWeek + " " + gb + " " + computeHash(cityName)
                         + " " + averageTemp + " " + stdDevTemp
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
                         + " " + averageClouds + " " + stdDevClouds
-                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + System.getProperty("line.separator"), false); // TODO: 15/08/17 true!!
+                        + " " + averageWind + " " + stdDevWind
+                                + " " + stripId + " " + durationInStrips +
+                                System.getProperty("line.separator"), false); // TODO: 15/08/17 true!!
             }
         });
         thread.start();
@@ -364,9 +373,10 @@ public class ResponseActivity extends AppCompatActivity {
 
 
         // connect to the server
-        new connectTask().execute("commit");
+        new LocalModelTask().execute();
+        //new connectTask().execute("commit");
 
-        System.out.println("FIRST COMMIT");
+    /*    System.out.println("FIRST COMMIT");
         new java.util.Timer().schedule(
                 new java.util.TimerTask() {
                     @Override
@@ -386,7 +396,7 @@ public class ResponseActivity extends AppCompatActivity {
                     }
                 },
                 8000
-        );
+        );*/
     }
 
     private void writeToExternalFile(String filename, String data, Boolean append) {
@@ -428,6 +438,7 @@ public class ResponseActivity extends AppCompatActivity {
                 parser.setResponseIndex(new NumericAttribute("gb"), 1); //the second attr is the gb
                 String trainingData, testData;
                 trainingData = testData = null;
+                String result = "";
                 try {
                     int numberOfVariables = getApplicationContext().getResources().getInteger(R.integer.numberOfVariables);
                     Attribute[] attributes = new Attribute[numberOfVariables];
@@ -435,7 +446,7 @@ public class ResponseActivity extends AppCompatActivity {
                             "avgHumid", "stdDevHumid", "avgClouds", "stdDevClouds", "avgWind", "stdDevWind", "stripId",
                             "durationInStrips"};
                     for (int i = 0; i < numberOfVariables; ++i) {
-                        if (i <= 2) //the first three attributes are the only nominal
+                        if (i == 0 || i == 2) //the first three attributes are the only nominal
                             attributes[i] = new NominalAttribute(attributesArray[i]);
                         else
                             attributes[i] = new NumericAttribute(attributesArray[i]);
@@ -446,14 +457,16 @@ public class ResponseActivity extends AppCompatActivity {
                     AttributeDataset train = parser.parse("TrainingData", attributes, new File("R.string.currentDataFile"));
                     AttributeDataset test = parser.parse("TestData", attributes, new File("R.string.predictionDataFile"));
                     double[][] x = train.toArray(new double[train.size()][]);
-                    int[] y = train.toArray(new int[train.size()]);
+                    double[] y = train.toArray(new double[train.size()]);
                     double[][] testx = test.toArray(new double[test.size()][]);
                     int[] testy = test.toArray(new int[test.size()]);
-                    const int maxNodes = 100;
-                    RegressionTree<double[]> tree = new RegressionTree<double[]>(x, y, 100);
+                    int maxNodes = 100;
+                    RegressionTree tree = new RegressionTree(x, y, maxNodes);
                     int error = 0;
                     for (int i = 0; i < testx.length; i++) {
-                        System.out.println(RegressionTree.predict(testx)); // the value of the prediction
+                        String resultToAppend = tree.predict(testx[i]) + " ";
+                        result = result + resultToAppend;
+                        System.out.println(resultToAppend); // the value of the prediction
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -469,9 +482,9 @@ public class ResponseActivity extends AppCompatActivity {
             protected void onPostExecute(String result) { //you receive the result as a parameter
                 System.out.println("Prediction done locally on the mobile with result");
                 System.out.println(result);
+                loadMessage.setText(result);
+                loadMessage.setTextSize(40);
             }
-
-
 
         }
 
