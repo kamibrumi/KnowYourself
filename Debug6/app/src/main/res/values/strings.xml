@@ -5,7 +5,7 @@
     <string name="idLatLonFile">idLatLon.txt</string>
     <string name="isFromMain">isFromMain.txt</string>
     <string name="predictionDayFile">predictionDay.txt</string>
-    <string name="xsFile">xs.txt</string>
+    <string name="xsFile">xs1.txt</string>
     <string name="predictionDataFile">predictionData.txt</string>
     <string name="currentDataFile">currentData.txt</string>
 </resources>

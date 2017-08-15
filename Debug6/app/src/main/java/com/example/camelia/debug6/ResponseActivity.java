@@ -346,13 +346,15 @@ public class ResponseActivity extends AppCompatActivity {
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
 
+                        Boolean append = true;
+                        if ( i == 0) append = false;
                         writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + cityName
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
                                 + " " + futureAverageClouds + " " + futureStdDevClouds
                                 + " " + futureAverageWind + " " + futureStdDevWind + " "
-                                + " " + futureStripId + " " + futureDurationInStrips + " final", false);
+                                + " " + futureStripId + " " + futureDurationInStrips + " final", append);
 
                     }
                 }
@@ -389,7 +391,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
                         + " " + averageClouds + " " + stdDevClouds
-                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + " final", true);
+                        + " " + averageWind + " " + stdDevWind + " " + stripId + " " + durationInStrips + " final", false); // TODO: 15/08/17 true!! 
             }
         });
         thread.start();

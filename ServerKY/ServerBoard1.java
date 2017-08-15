@@ -48,8 +48,10 @@ public class ServerBoard1 {
                     //this method is actually a callback method, because it will run every time when it will be called from
                     //TCPServer class (at while)
                     public void messageReceived(String message) {
-						BufferedWriter bw = null;
-						FileWriter fw = null;
+						BufferedWriter bwCurrent = null;
+						FileWriter fwCurrent = null;
+						BufferedWriter bwFuture = null;
+						FileWriter fwFuture = null;
 						System.out.println(message);
 
 						
@@ -61,6 +63,10 @@ public class ServerBoard1 {
 								patt = patt + copyPatt;			
 							} */
 							String[] currentAndFutureFiles = message.split("SPLIT");
+							System.out.println("SPLIT in (# parti): " + currentAndFutureFiles.length);
+
+							System.out.println("current==== " + currentAndFutureFiles[0]);
+							System.out.println("future==== " + currentAndFutureFiles[1]);
 
 							String[] current = currentAndFutureFiles[0].split(" final");
 							String[] future = currentAndFutureFiles[1].split(" final");
@@ -85,13 +91,13 @@ public class ServerBoard1 {
 							try {
 
 
-								fw = new FileWriter("sampleForModel.txt");
-								bw = new BufferedWriter(fw);
-								bw.write(currentData);
+								fwCurrent = new FileWriter("sampleForModel.txt");
+								bwCurrent = new BufferedWriter(fwCurrent);
+								bwCurrent.write(currentData);
 
-								fw = new FileWriter("sampleForPrediction.txt");
-								bw = new BufferedWriter(fw);
-								bw.write(futureData);
+								fwFuture = new FileWriter("sampleForPrediction.txt");
+								bwFuture = new BufferedWriter(fwFuture);
+								bwFuture.write(futureData);
 
 								System.out.println("Done");
 
@@ -103,11 +109,17 @@ public class ServerBoard1 {
 
 								try {
 
-									if (bw != null)
-										bw.close();
+									if (bwCurrent != null)
+										bwCurrent.close();
 
-									if (fw != null)
-										fw.close();
+									if (bwFuture != null)
+										bwFuture.close();
+
+									if (fwCurrent != null)
+										fwCurrent.close();
+
+									if (fwFuture != null)
+										fwFuture.close();
 
 								} catch (IOException ex) {
 

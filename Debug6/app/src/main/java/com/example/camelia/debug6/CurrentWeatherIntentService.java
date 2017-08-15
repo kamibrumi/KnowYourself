@@ -86,6 +86,7 @@ public class CurrentWeatherIntentService extends IntentService{
             currentTemp = currentTemp - 273.15; //in celsius
 
             writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius   //System.out.println("s-a terminat intentul");
+
         }
         try {
             System.out.println("current weather= " + readFromFile(getString(R.string.xsFile), this));
@@ -97,7 +98,7 @@ public class CurrentWeatherIntentService extends IntentService{
 
     private void writeToFile(String fileName, String data, Context context) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE)); // TODO: 15/08/17 mode append!!
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         }
