@@ -53,11 +53,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         commitB = (Button) findViewById(R.id.commit);
         pB = (ProgressBar) findViewById(R.id.progressBar);
+        System.out.println(String.valueOf(isMyServiceRunning()));
 
-        //int unixCurrentTime = (int) (System.currentTimeMillis() / 1000L);
-        //int unixStartTime = unixCurrentTime - 12*60*60;
-        //System.out.println("unixStartTime: " + String.valueOf(unixStartTime));
-        //System.out.println("unixCurrentTime: " + String.valueOf(unixCurrentTime));
+        if (idll == "" || idll == null) {
+            isLocation();
+        }
+
+        if (!isMyServiceRunning()) {
+            //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+            final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+            final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                    (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
+        }
     }
 
     @Override
@@ -67,9 +77,6 @@ public class MainActivity extends AppCompatActivity {
             idll = readFromExternalFile(getString(R.string.idLatLonFile));
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        if (idll == "" || idll == null) {
-            isLocation();
         }
     }
 
@@ -160,43 +167,79 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void commit(View view) {
-
-        if (isNetworkAvailable()) {
-            if (isLocation()) {
-                writeToInternalFile(getString(R.string.isFromMain), "true", this);
-                int howWasYourDay = pB.getProgress();
-                System.out.println("how was my day------------> " + howWasYourDay);
-                Intent intent = new Intent(this, ResponseActivity.class);
-                intent.putExtra("how", String.valueOf(howWasYourDay));
-                startActivity(intent);
-            } else {
-                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                dialog.setMessage("Enable your location for a while, pls.");
-                dialog.setTitle("Location Needed");
-                dialog.setCancelable(false);
-                dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                        // TODO Auto-generated method stub
-                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        startActivity(myIntent);
-                        //get gps
-                    }
-                });
-                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                        // TODO Auto-generated method stub
-
-                    }
-                });
-                dialog.show();
-            }
-        } else {
-            Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
+        String xsContent = readFromInternalFile(getString(R.string.xsFile));
+        if(xsContent == "" || xsContent == null) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Still collecting weather data...", Toast.LENGTH_SHORT);
             toast.show();
+        }else {
+            if (isNetworkAvailable()) {
+                if (isLocation()) {
+                    writeToInternalFile(getString(R.string.isFromMain), "true", this);
+                    int howWasYourDay = pB.getProgress();
+                    System.out.println("how was my day------------> " + howWasYourDay);
+                    Intent intent = new Intent(this, ResponseActivity.class);
+                    intent.putExtra("how", String.valueOf(howWasYourDay));
+                    startActivity(intent);
+                } else {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                    dialog.setMessage("Enable your location for a while, pls.");
+                    dialog.setTitle("Location Needed");
+                    dialog.setCancelable(false);
+                    dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                            // TODO Auto-generated method stub
+                            Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(myIntent);
+                            //get gps
+                        }
+                    });
+                    dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                            // TODO Auto-generated method stub
+
+                        }
+                    });
+                    dialog.show();
+                }
+            } else {
+                Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
+                toast.show();
+            }
         }
+    }
+
+    private String readFromInternalFile(String fileName) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = this.openFileInput(fileName);
+
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
     }
 
     public void incrementProgressBar (View view) {
@@ -268,14 +311,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }
                 writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
-                //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-                final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                        (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                        1000 * 2 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
-                System.out.println("se face trimiterea intentului!!!!!!!!!!!!!!");
+
                 return true;
             }
 
