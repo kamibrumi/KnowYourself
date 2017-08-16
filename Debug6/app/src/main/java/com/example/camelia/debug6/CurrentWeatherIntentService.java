@@ -80,7 +80,6 @@ public class CurrentWeatherIntentService extends IntentService{
                 //cityId = obj.getJSONArray("list").getJSONObject(0).getLong("id");
                 //cityName = obj.getJSONArray("list").getJSONObject(0).getString("name");
                 //writeToExternalFile(getString(R.string.idLatLonFile), cityName + " " + cityId + " " + lat + " " + lon, false);
-                System.out.println("NOUL CONTINUT A LUI IDLATLONFILE: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                 main = obj.getJSONArray("list").getJSONObject(0).getJSONObject("main");
                 currentTemp = main.getDouble("temp");
                 pressure = main.getDouble("pressure");
@@ -90,8 +89,6 @@ public class CurrentWeatherIntentService extends IntentService{
 
 
             } catch (JSONException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
                 e.printStackTrace();
             }
 

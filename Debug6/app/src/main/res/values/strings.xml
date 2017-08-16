@@ -8,4 +8,5 @@
     <string name="xsFile">xs1.txt</string>
     <string name="predictionDataFile">predictionData.txt</string>
     <string name="currentDataFile">currentData.txt</string>
+    <string name="firstTime">firstTime.txt</string>
 </resources>

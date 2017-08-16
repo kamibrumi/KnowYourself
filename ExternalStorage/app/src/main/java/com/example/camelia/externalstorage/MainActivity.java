@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         writeToFile("hihi.txt", "234", false);
         String content = "";
         try {
-            content = readFromFile1("hihi.txt");
+            content = readFromFile1("idLatLon.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }

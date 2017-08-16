@@ -56,19 +56,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         commitB = (Button) findViewById(R.id.commit);
         pB = (ProgressBar) findViewById(R.id.progressBar);
-        System.out.println(String.valueOf(isMyServiceRunning()));
-        writeToExternalFile(getString(R.string.idLatLonFile), "", false);
 
-        final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-        final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager1.getNextAlarmClock() == null) {
-            System.out.println("ALARMA NU A MAI FOST SETATA NICIODATA!!");
+        //check whether the app is opened for the very first time. if the file "firstTime" do not exist, then the application is opened for the first time and we create it.
+        if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
+            writeToInternalFile(getString(R.string.firstTime), "false", this);
             isLocation(true);
-        }
+            System.out.println("APPLICATION FOR THE FIRST TIME");
 
+        }
+        System.out.println("LAT SI LON IN ON CREATE: " + latitude + " " + longitude);
+        try {
+            System.out.println("CONTINUTUL LUI IDLATLON in on Create: " + readFromExternalFile(getString(R.string.idLatLonFile)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
+
+
 
     @Override
     public void onResume() {
@@ -193,12 +199,17 @@ public class MainActivity extends AppCompatActivity {
         String ret = "";
 
         try {
+            System.out.println("000000000000000000000000");
             InputStream inputStream = this.openFileInput(fileName);
+            System.out.println("11111111111111111111111111111111");
 
 
             if ( inputStream != null ) {
+                System.out.println("222222222222222222222222");
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                System.out.println("3333333333333333333333");
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                System.out.println("444444444444444444444444444");
                 String receiveString = "";
                 StringBuilder stringBuilder = new StringBuilder();
 
@@ -212,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (FileNotFoundException e) {
             Log.e("login activity", "File not found: " + e.toString());
+            if (fileName == getString(R.string.firstTime)) return "true";
         } catch (IOException e) {
             Log.e("login activity", "Can not read file: " + e.toString());
         }
@@ -239,33 +251,20 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //boolean gps_enabled = false;
         //boolean network_enabled = false;
-
+        System.out.println("");
         // Define a listener that responds to location updates
         LocationListener locationListener = new LocationListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 System.out.println("ON LOCATION CHANGED");
                 writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
                 try {
-                    System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
+                    System.out.println("se face try-ul!!!!!!!!!!!!");
+                    System.out.println(readFromExternalFile(getString(R.string.idLatLonFile)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                if (setAlarm) {
-                    System.out.println("SE SETEAZA ALARMA");
-                    //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                    final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-                    final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                            (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                    final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                    alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                            1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h)
-                }
                 locationManager.removeUpdates(this);
-                // TODO: 15/08/17 opreste locatiaaaaa
-                // TODO: 15/08/17 sterge is location din response activity!!!
-                // TODO: 15/08/17 se executa a doua oara inainte de prima oara!!  NAIN, ii bine!!
 
             }
 
@@ -295,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
 
         isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         if (isNetworkEnabled) {
+            System.out.println("NETWORK ENABLED");
 
             locationManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER,
@@ -302,14 +302,33 @@ public class MainActivity extends AppCompatActivity {
                     0, locationListener);
 
             if (locationManager != null) {
+                System.out.println("LOCATION MANAGER NOT NULL");
                 location = locationManager
                         .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
                 if (location != null) {
+                    System.out.println("LOCATION NOT NULL");
 
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
+                    System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
+                    writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
+                    if (setAlarm) {
+                        System.out.println("SE SETEAZA ALARMA");
+                        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                                1000 * 10, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
+                    }
+                    try {
+                        System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 return true;
             }
@@ -337,16 +356,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             dialog.show();
-        }
-        return false;
-    }
-
-    private boolean isMyServiceRunning() {
-        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if ("com.example.MyService".equals(service.service.getClassName())) {
-                return true;
-            }
         }
         return false;
     }

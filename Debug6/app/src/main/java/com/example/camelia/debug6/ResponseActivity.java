@@ -142,6 +142,8 @@ public class ResponseActivity extends AppCompatActivity {
                 lat = Double.parseDouble(idll[0]);
                 lon = Double.parseDouble(idll[1]);
 
+                System.out.println("LAT&LON: " + lat + " " + lon);
+
                 URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lon + "&lon=" + lat + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
                 //we use the current data link to retrieve the id of the city and use it to calculate the link of the forecast
                 String weatherData = null;
