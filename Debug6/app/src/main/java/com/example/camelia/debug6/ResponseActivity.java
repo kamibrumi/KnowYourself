@@ -52,11 +52,6 @@ public class ResponseActivity extends AppCompatActivity {
     TextView loadMessage, dayTv, afterLoadingTV;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
-    boolean isNetworkEnabled = false;
-    Location location;
-    double latitude;
-    double longitude;
-    long cityId;
     String cityName;
     boolean isFromMain;
     int dayOfWeek, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
@@ -119,68 +114,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
         else {
-            // Acquire a reference to the syfalsestem Location Manager
-            final LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-            System.out.println("LOCATION MANAGER DECLARED");
-            // Define a listener that responds to location updates
-            LocationListener locationListener = new LocationListener() {
-                public void onLocationChanged(Location location) {
-                    // Called when a new location is found by the network location provider.
-                    System.out.println("ON LOCATION CHANGED");
-                    writeDataAndPredict();
-                    locationManager.removeUpdates(this);
-                }
-
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                }
-
-                public void onProviderEnabled(String provider) {
-                }
-
-                public void onProviderDisabled(String provider) {
-                }
-            };
-
-            // Register the listener with the Location Manager to receive location updates
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
-                toast.show();
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                //return;
-            }
-
-            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            if (isNetworkEnabled) {
-                System.out.println("LOCATION ENCABLED");
-
-                locationManager.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER,
-                        0,
-                        0, locationListener);
-
-                if (locationManager != null) {
-                    location = locationManager
-                            .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    System.out.println("LOCATION MANAGER NOT NULL");
-
-                    if (location != null) {
-                        System.out.println("LOCATION NOT NULL");
-
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
-                    }
-                }
-
-            } else {
-                Toast toast = Toast.makeText(this, "Open your location!", Toast.LENGTH_SHORT);
-                toast.show();
-            }
+            writeDataAndPredict();
         }
     }
 
@@ -193,10 +127,22 @@ public class ResponseActivity extends AppCompatActivity {
             public void run(){
                 System.out.println("WE WRITE DATA");
 
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
+                double latitude, longitude;
+                long cityId = 0;
+                String cityFile = null;
+                try {
+                    cityFile = readFromExternalFile(getString(R.string.idLatLonFile));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-                URL = "http://api.openweathermap.org/data/2.5/find?lat=" + latitude + "&lon=" + longitude + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+                System.out.println("CITYFILE CONTENT: " + cityFile);
+                String[] idll = cityFile.split(" ");
+                double lat, lon;
+                lat = Double.parseDouble(idll[0]);
+                lon = Double.parseDouble(idll[1]);
+
+                URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lon + "&lon=" + lat + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
                 //we use the current data link to retrieve the id of the city and use it to calculate the link of the forecast
                 String weatherData = null;
                 try {
@@ -222,7 +168,7 @@ public class ResponseActivity extends AppCompatActivity {
                 res += cn[cn.length - 1];
                 cityName = res;
 
-                writeToExternalFile(getString(R.string.idLatLonFile), cityId + " " + latitude + " " + longitude, false);
+                writeToExternalFile(getString(R.string.idLatLonFile), cityName + " " + cityId + " " + lat + " " + lon, false);
 
                 URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
 

@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 System.out.println("ON LOCATION CHANGED");
-                writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
+                writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
                 try {
                     System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                 } catch (IOException e) {

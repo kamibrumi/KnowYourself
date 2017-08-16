@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,8 +48,8 @@ public class CurrentWeatherIntentService extends IntentService{
             System.out.println("CITYFILE CONTENT: " + cityFile);
             String[] idll = cityFile.split(" ");
             double lat, lon;
-            lat = Double.parseDouble(idll[1]);
-            lon = Double.parseDouble(idll[2]);
+            lat = Double.parseDouble(idll[0]);
+            lon = Double.parseDouble(idll[1]);
 
             URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lat + "&lon=" + lon + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
 
@@ -68,12 +69,18 @@ public class CurrentWeatherIntentService extends IntentService{
             //System.out.println("am luat json object-ul");
 
             JSONObject main = null;
+            //long cityId = 0;
+            //String cityName = "name";
             Double currentTemp = 25.;
             Double pressure = 1020.;
             Double humid = 50.;
             Double clouds = 50.;
             Double wind = 5.;
             try {
+                //cityId = obj.getJSONArray("list").getJSONObject(0).getLong("id");
+                //cityName = obj.getJSONArray("list").getJSONObject(0).getString("name");
+                //writeToExternalFile(getString(R.string.idLatLonFile), cityName + " " + cityId + " " + lat + " " + lon, false);
+                System.out.println("NOUL CONTINUT A LUI IDLATLONFILE: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                 main = obj.getJSONArray("list").getJSONObject(0).getJSONObject("main");
                 currentTemp = main.getDouble("temp");
                 pressure = main.getDouble("pressure");
@@ -83,6 +90,8 @@ public class CurrentWeatherIntentService extends IntentService{
 
 
             } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -97,6 +106,36 @@ public class CurrentWeatherIntentService extends IntentService{
             e.printStackTrace();
         }
         System.out.println("CURRENT WEATHER INTENT FIN");
+    }
+
+    private void writeToExternalFile(String filename, String data, Boolean append) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
+        try {
+            FileOutputStream fos = new FileOutputStream(file, append); //true because we append
+            byte[] strb = data.getBytes();
+            for(int i = 0; i < strb.length; ++i) {
+                fos.write(strb[i]);
+            }
+            fos.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("FileStreamsTest: " + e);
+        } catch (IOException e) {
+            System.err.println("FileStreamsTest: " + e);
+        }
+    }
+
+    private void writeToInternalFile(String fileName, String data) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(data + '\n');
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void writeToFile(String fileName, String data, Context context) {
