@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Environment;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -12,6 +13,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,11 +39,12 @@ public class CurrentWeatherIntentService extends IntentService{
         if (isNetworkAvailable()) {
             cityFile = null;
             try {
-                cityFile = readFromFile(getString(R.string.idLatLonFile), this);
+                cityFile = readFromExternalFile(getString(R.string.idLatLonFile));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
+            System.out.println("CITYFILE CONTENT: " + cityFile);
             String[] idll = cityFile.split(" ");
             double lat, lon;
             lat = Double.parseDouble(idll[1]);
@@ -105,6 +108,44 @@ public class CurrentWeatherIntentService extends IntentService{
         catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
+    }
+
+    public String readFromExternalFile(String filename) throws IOException {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/docs");
+        myDir.mkdirs();
+
+        File file = new File (myDir, filename);
+        //get InputStream of a file
+        InputStream is = new FileInputStream(file);
+        String strContent;
+
+                /*
+                 * There are several way to convert InputStream to String. First is using
+                 * BufferedReader as given below.
+                 */
+
+        //Create BufferedReader object
+        BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
+        StringBuffer sbfFileContents = new StringBuffer();
+        String line = null;
+
+        //read file line by line
+        while( (line = bReader.readLine()) != null){
+            sbfFileContents.append(line);
+        }
+
+        //finally convert StringBuffer object to String!
+        strContent = sbfFileContents.toString();
+
+                /*
+                 * Second and one liner approach is to use Scanner class. This is only supported
+                 * in Java 1.5 and higher version.
+                 */
+
+        //strContent = new Scanner(is).useDelimiter("\\A").next();
+        return strContent;
+
     }
 
     private String readFromFile(String filename, Context context) throws IOException {

@@ -63,8 +63,11 @@ public class MainActivity extends AppCompatActivity {
         final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
                 (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager1.getNextAlarmClock() == null) System.out.println("ALARMA NU A MAI FOST SETATA NICIODATA!!");
-        isLocation();
+        if (alarmManager1.getNextAlarmClock() == null) {
+            System.out.println("ALARMA NU A MAI FOST SETATA NICIODATA!!");
+            isLocation(true);
+        }
+
     }
 
     @Override
@@ -170,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
         } else {
             if (isNetworkAvailable()) {
-                if (isLocation()) {
+                if (isLocation(false)) {
                     writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
                     int howWasYourDay = pB.getProgress();
                     System.out.println("how was my day------------> " + howWasYourDay);
@@ -231,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public boolean isLocation(){
+    public boolean isLocation(final boolean setAlarm){
         System.out.println("A INTRAT IN ISLOCATION");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //boolean gps_enabled = false;
@@ -242,29 +245,27 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
-                System.out.println("A DOUA OARA??????????????");
+                System.out.println("ON LOCATION CHANGED");
                 writeToExternalFile(getString(R.string.idLatLonFile), 12345 + " " + latitude + " " + longitude, false);
                 try {
-                    if (readFromExternalFile(getString(R.string.idLatLonFile)) == "") isLocation();
-                    else {
-                        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                        final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-                        final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                        if (alarmManager1.getNextAlarmClock() == null) {
-                            System.out.println("AM LANSAT ALARMAAAAAAAAAAAA");
-                            alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                                    1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 2h)
-                        }
-                        locationManager.removeUpdates(this);
-                        // TODO: 15/08/17 opreste locatiaaaaa 
-                        // TODO: 15/08/17 sterge is location din response activity!!! 
-                        // TODO: 15/08/17 se executa a doua oara inainte de prima oara!! 
-                    }
+                    System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                if (setAlarm) {
+                    System.out.println("SE SETEAZA ALARMA");
+                    //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                    final Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                    final PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                            (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    final AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                    alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                            1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h)
+                }
+                locationManager.removeUpdates(this);
+                // TODO: 15/08/17 opreste locatiaaaaa
+                // TODO: 15/08/17 sterge is location din response activity!!!
+                // TODO: 15/08/17 se executa a doua oara inainte de prima oara!!  NAIN, ii bine!!
 
             }
 
@@ -308,7 +309,6 @@ public class MainActivity extends AppCompatActivity {
 
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
-                    System.out.println("PRIMA OARA??????????");
 
                 }
                 return true;
