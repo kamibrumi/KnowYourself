@@ -258,12 +258,6 @@ public class MainActivity extends AppCompatActivity {
                 // Called when a new location is found by the network location provider.
                 System.out.println("ON LOCATION CHANGED");
                 writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
-                try {
-                    System.out.println("se face try-ul!!!!!!!!!!!!");
-                    System.out.println(readFromExternalFile(getString(R.string.idLatLonFile)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 locationManager.removeUpdates(this);
 
             }
@@ -322,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                                 (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                         AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
                         alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                                1000 * 10, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
+                                1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
                     }
                     try {
                         System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));

@@ -170,8 +170,6 @@ public class ResponseActivity extends AppCompatActivity {
                 res += cn[cn.length - 1];
                 cityName = res;
 
-                writeToExternalFile(getString(R.string.idLatLonFile), cityName + " " + cityId + " " + lat + " " + lon, false);
-
                 URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
 
                 weatherData = null;
