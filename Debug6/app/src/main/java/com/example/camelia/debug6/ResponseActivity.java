@@ -44,7 +44,7 @@ public class ResponseActivity extends AppCompatActivity {
     private String URL;
     String gb;
     private TCPClient mTcpClient;
-    TextView loadMessage, dayTv, afterLoadingTV;
+    TextView loadMessage, dayTv;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
     String cityName;
@@ -57,13 +57,11 @@ public class ResponseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_response);
         loadMessage = (TextView) findViewById(R.id.loadMessage);
-        afterLoadingTV = (TextView) findViewById(R.id.afterLoadingTV);
         loading = (ProgressBar) findViewById(R.id.loading);
         dayTv = (TextView) findViewById(R.id.dayTv);
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
-        System.out.println("on CReate INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
     }
 
@@ -88,7 +86,7 @@ public class ResponseActivity extends AppCompatActivity {
         writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
         System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
 
-        if (readFromInternalFile(getString(R.string.xsFile)) == "") { //// TODO: 14/08/17 if(xsFile is empty) --> arata continutul la prediction file... Astept sa imi deie Iuli formatul la raspunsul ca sa bag in listView.
+        if (readFromInternalFile(getString(R.string.xsFile)) == "") { // TODO: 17/08/17 daca xs1 ii gol nici macar nu se va ajunge la response activity!! in viitor: cand ii gol, pur si simplu arat predictia
             String prediction = readFromInternalFile(getString(R.string.predictionFile));
 
             if(prediction == "" || prediction == null) {
@@ -102,8 +100,7 @@ public class ResponseActivity extends AppCompatActivity {
                 //String[] dayAndPrediction = prediction.split(" ");
                 //Double percentage = Double.parseDouble(dayAndPrediction[1]);
                 //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-                loadMessage.setVisibility(View.GONE);
-                afterLoadingTV.setText(prediction);
+                loadMessage.setText(prediction);
                 loadMessage.setTextSize(40);
             }
 
@@ -448,7 +445,6 @@ public class ResponseActivity extends AppCompatActivity {
                         }
                     }
                     parser.setResponseIndex(new NumericAttribute("goodBad"), 1); //the second attr is the gb
-                    System.out.println("inainte de pposibila problema cu FILE");
                     //I have verified in the code that the parse() routine explicitly avoids
                     //the column containing the prediction variable. This holds in the following
                     //two lines both for train as for test
@@ -458,10 +454,8 @@ public class ResponseActivity extends AppCompatActivity {
 
                     File currentFile = new File (myDir, getString(R.string.currentDataFile));
                     AttributeDataset train = parser.parse("TrainingData", attributes, currentFile);
-                    System.out.println("DUPA POSIBILA PROBLEMA CU FILE");
                     File predictionFile = new File (myDir, getString(R.string.predictionDataFile));
                     AttributeDataset test = parser.parse("TestData", attributes, predictionFile);
-                    System.out.println("SE MAI AJUNGE PANA AICI???");
                     double[][] x = train.toArray(new double[train.size()][]);
                     double[] y = train.toArray(new double[train.size()]);
                     double[][] testx = test.toArray(new double[test.size()][]);
@@ -471,17 +465,13 @@ public class ResponseActivity extends AppCompatActivity {
                     int error = 0;
                     for (int i = 0; i < testx.length; i++) {
                         String resultToAppend = tree.predict(testx[i]) + " ";
-                        result = result + resultToAppend;
-                        System.out.println(resultToAppend); // the value of the prediction
-                        System.out.println("LA SFARSITUL TRY-ULUI");
+                        result = result + resultToAppend + " ";
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println("IN CATCH");
                 }
-                System.out.println("DUPA TRY");
 
-                return null;
+                return result;
             }
             //trainingData = readFromExternalFile(getString(R.string.currentDataFile));
             //testData =  readFromExternalFile(getString(R.string.predictionDataFile));
@@ -493,6 +483,7 @@ public class ResponseActivity extends AppCompatActivity {
                 System.out.println(result);
                 loadMessage.setText(result);
                 loadMessage.setTextSize(40);
+                loading.setVisibility(View.GONE);
                 System.out.println("ON POST EXECUTE");
             }
 
