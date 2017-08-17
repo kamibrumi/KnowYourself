@@ -47,7 +47,7 @@ public class ResponseActivity extends AppCompatActivity {
     TextView loadMessage, dayTv;
     ArrayList<Double> tempsArray, pressuresArray, humiditiesArray, cloudsArray, windArray;
     ProgressBar loading;
-    String cityName;
+    //String cityName;
     boolean isFromMain;
     int dayOfWeek, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
 
@@ -109,14 +109,14 @@ public class ResponseActivity extends AppCompatActivity {
             writeDataAndPredict();
         }
     }
-
+/*
     private int computeHash(String myString) {
         int hash = 7;
         for (int i = 0; i < myString.length(); i++) {
             hash = hash*31 + myString.charAt(i);
         }
         return hash;
-    }
+    } */
 
     public void writeDataAndPredict() {
 
@@ -142,7 +142,7 @@ public class ResponseActivity extends AppCompatActivity {
 
                 System.out.println("LAT&LON: " + lat + " " + lon);
 
-                URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lon + "&lon=" + lat + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+                URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lat + "&lon=" + lon + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
                 //we use the current data link to retrieve the id of the city and use it to calculate the link of the forecast
                 String weatherData = null;
                 try {
@@ -154,11 +154,11 @@ public class ResponseActivity extends AppCompatActivity {
                 try {
                     obj = new JSONObject(weatherData);
                     cityId = obj.getJSONArray("list").getJSONObject(0).getLong("id");
-                    cityName = obj.getJSONArray("list").getJSONObject(0).getString("name");
+                    //cityName = obj.getJSONArray("list").getJSONObject(0).getString("name");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
+                /*
                 //we put underscore in between the words of the cityName
                 String[] cn = cityName.split(" ");
                 String res = "";
@@ -166,7 +166,7 @@ public class ResponseActivity extends AppCompatActivity {
                     res += cn[i] + "_";
                 }
                 res += cn[cn.length - 1];
-                cityName = res;
+                cityName = res; */
 
                 URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
 
@@ -303,7 +303,7 @@ public class ResponseActivity extends AppCompatActivity {
                         Boolean append = true;
                         if ( i == 0) append = false;
                         //writting state of the day: 0 given that the crappy library asks for this data
-                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + 0 + " " + cityName
+                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + 0 + " " + cityId
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
@@ -340,9 +340,9 @@ public class ResponseActivity extends AppCompatActivity {
                 double stdDevWind = getStdDev(getVariance(averageWind, windArray));
 
                 int stripId = hourOfDay/3;
-
+                //am inlocuit computeHash(cityName) cu city id
                 writeToExternalFile(getString(R.string.currentDataFile),
-                        dayOfWeek + " " + gb + " " + computeHash(cityName)
+                        dayOfWeek + " " + gb + " " + cityId
                         + " " + averageTemp + " " + stdDevTemp
                         + " " + averagePressure + " " + stdDevPressure
                         + " " + averageHumidity + " " + stdDevHumidity
@@ -648,7 +648,7 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[3]));
             windArray.add(Double.parseDouble(sarr[4]));
         }
-        //writeToInternalFile(getString(R.string.xsFile), ""); // TODO: 17/08/17 descomenteza linia asta
+        writeToInternalFile(getString(R.string.xsFile), "");
     }
 
 
