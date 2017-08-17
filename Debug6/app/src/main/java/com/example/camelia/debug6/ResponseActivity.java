@@ -1,23 +1,18 @@
 package com.example.camelia.debug6;
 
-import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,21 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import smile.data.parser.DelimitedTextParser;
 import smile.data.*;
-import java.io.ByteArrayInputStream;
-import smile.regression.RegressionTree;
+import smile.RegressionTree;
 
 public class ResponseActivity extends AppCompatActivity {
     //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
@@ -321,7 +312,7 @@ public class ResponseActivity extends AppCompatActivity {
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
                                 + " " + futureAverageClouds + " " + futureStdDevClouds
                                 + " " + futureAverageWind + " " + futureStdDevWind + " "
-                                + " " + futureStripId + " " + futureDurationInStrips + " final", append);
+                                + " " + futureStripId + " " + futureDurationInStrips + System.getProperty("line.separator"), append);
 
                     }
                 }
@@ -361,7 +352,7 @@ public class ResponseActivity extends AppCompatActivity {
                         + " " + averageClouds + " " + stdDevClouds
                         + " " + averageWind + " " + stdDevWind
                                 + " " + stripId + " " + durationInStrips +
-                                System.getProperty("line.separator"), false); // TODO: 15/08/17 true!!
+                                System.getProperty("line.separator"), true);
             }
         });
         thread.start();
@@ -372,6 +363,7 @@ public class ResponseActivity extends AppCompatActivity {
         }
 
 
+        System.out.println("INAINTE DE LOCALMODELTASK.EXECUTE");
         // connect to the server
         new LocalModelTask().execute();
         //new connectTask().execute("commit");
@@ -432,34 +424,48 @@ public class ResponseActivity extends AppCompatActivity {
 
         public class LocalModelTask extends AsyncTask<Void,Void,String> {
 
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             protected String doInBackground(Void... voids) {
+                System.out.println("A INTRAT IN DO IN BACKGROUND");
                 DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setResponseIndex(new NumericAttribute("gb"), 1); //the second attr is the gb
+                //parser.setResponseIndex(new NumericAttribute("goodBad"), 1); //the second attr is the gb
                 String trainingData, testData;
                 trainingData = testData = null;
                 String result = "";
+                System.out.println("INAINTE DE TRY");
                 try {
                     int numberOfVariables = getApplicationContext().getResources().getInteger(R.integer.numberOfVariables);
                     Attribute[] attributes = new Attribute[numberOfVariables];
-                    String[] attributesArray = {"day", "goodBad", "loc", "avgTemp", "stdDevTemp", "avgPres", "stdDevPres",
+                    String[] attributesArray = {"day", "loc", "avgTemp", "stdDevTemp", "avgPres", "stdDevPres",
                             "avgHumid", "stdDevHumid", "avgClouds", "stdDevClouds", "avgWind", "stdDevWind", "stripId",
                             "durationInStrips"};
                     for (int i = 0; i < numberOfVariables; ++i) {
-                        if (i == 0 || i == 2) //the first three attributes are the only nominal
+                        if (i <= 1) //the first three attributes are the only nominal
                             attributes[i] = new NominalAttribute(attributesArray[i]);
-                        else
+                        else{
                             attributes[i] = new NumericAttribute(attributesArray[i]);
+                        }
                     }
+                    parser.setResponseIndex(new NumericAttribute("goodBad"), 1); //the second attr is the gb
+                    System.out.println("inainte de pposibila problema cu FILE");
                     //I have verified in the code that the parse() routine explicitly avoids
                     //the column containing the prediction variable. This holds in the following
                     //two lines both for train as for test
-                    AttributeDataset train = parser.parse("TrainingData", attributes, new File("R.string.currentDataFile"));
-                    AttributeDataset test = parser.parse("TestData", attributes, new File("R.string.predictionDataFile"));
+                    String root = Environment.getExternalStorageDirectory().toString();
+                    File myDir = new File(root + "/docs");
+                    myDir.mkdirs();
+
+                    File currentFile = new File (myDir, getString(R.string.currentDataFile));
+                    AttributeDataset train = parser.parse("TrainingData", attributes, currentFile);
+                    System.out.println("DUPA POSIBILA PROBLEMA CU FILE");
+                    File predictionFile = new File (myDir, getString(R.string.predictionDataFile));
+                    AttributeDataset test = parser.parse("TestData", attributes, predictionFile);
+                    System.out.println("SE MAI AJUNGE PANA AICI???");
                     double[][] x = train.toArray(new double[train.size()][]);
                     double[] y = train.toArray(new double[train.size()]);
                     double[][] testx = test.toArray(new double[test.size()][]);
-                    int[] testy = test.toArray(new int[test.size()]);
+                    double[] testy = test.toArray(new double[test.size()]);
                     int maxNodes = 100;
                     RegressionTree tree = new RegressionTree(x, y, maxNodes);
                     int error = 0;
@@ -467,10 +473,13 @@ public class ResponseActivity extends AppCompatActivity {
                         String resultToAppend = tree.predict(testx[i]) + " ";
                         result = result + resultToAppend;
                         System.out.println(resultToAppend); // the value of the prediction
+                        System.out.println("LA SFARSITUL TRY-ULUI");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.out.println("IN CATCH");
                 }
+                System.out.println("DUPA TRY");
 
                 return null;
             }
@@ -480,10 +489,11 @@ public class ResponseActivity extends AppCompatActivity {
             //InputStream testStream = new ByteArrayInputStream(testData.getBytes());
 
             protected void onPostExecute(String result) { //you receive the result as a parameter
-                System.out.println("Prediction done locally on the mobile with result");
+                System.out.print("Prediction done locally on the mobile with result ");
                 System.out.println(result);
                 loadMessage.setText(result);
                 loadMessage.setTextSize(40);
+                System.out.println("ON POST EXECUTE");
             }
 
         }
@@ -647,7 +657,7 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[3]));
             windArray.add(Double.parseDouble(sarr[4]));
         }
-        writeToInternalFile(getString(R.string.xsFile), "");
+        //writeToInternalFile(getString(R.string.xsFile), ""); // TODO: 17/08/17 descomenteza linia asta
     }
 
 
