@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Debug6</string>
     <string name="answeredFile">answered2.txt</string>
-    <string name="predictionFile">prediction.txt</string>
+    <string name="predictionDisplayFile">prediction.txt</string>
     <string name="idLatLonFile">idLatLon.txt</string>
     <string name="isFromMain">isFromMain.txt</string>
-    <string name="predictionDayFile">predictionDay.txt</string>
+    <string name="predictionStripFile">predictionStrip.txt</string>
     <string name="xsFile">xs1.txt</string>
     <string name="predictionDataFile">predictionData.txt</string>
     <string name="currentDataFile">currentData.txt</string>

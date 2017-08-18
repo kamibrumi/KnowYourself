@@ -94,8 +94,11 @@ public class CurrentWeatherIntentService extends IntentService{
 
             currentTemp = currentTemp - 273.15; //in celsius
 
-            writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius
-            //writeToExternalFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", true); //we converted kelvin to celsius
+            Calendar calendar = GregorianCalendar.getInstance();
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+            //writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius
+            writeToExternalFile(getString(R.string.xsFile),hour + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", true); //we converted kelvin to celsius
 
         } else {
 
@@ -103,7 +106,7 @@ public class CurrentWeatherIntentService extends IntentService{
 
 
         try {
-            System.out.println("current weather= " + readFromFile(getString(R.string.xsFile), this));
+            System.out.println("current weather= " + readFromExternalFile(getString(R.string.xsFile)));
         } catch (IOException e) {
             e.printStackTrace();
         }

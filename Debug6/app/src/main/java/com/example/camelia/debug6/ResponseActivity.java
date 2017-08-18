@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,47 +83,76 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
     //we get the temperature and we write in the file day + Good/Bad + temperature
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onResume() {
         super.onResume();
-
         Calendar calendar = GregorianCalendar.getInstance();
-        dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-        month = calendar.get(Calendar.MONTH);
-        year = calendar.get(Calendar.YEAR);
         hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
         dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
+        //System.out.println("ON RESUME DE LA RESPONSE ACTIVITY!!!!!!!!!");
+        try {
+            System.out.println("CONTINUTUL LUI PREDICTION STRIP " + readFromInternalFile(getString(R.string.predictionStripFile)));
+            System.out.println("STRIP ACTUAL: " + String.valueOf(hourOfDay / 3));
+            System.out.println("CONTINUTUL LUI predictionDisplayFile: " + readFromInternalFile(getString(R.string.predictionDisplayFile)));
+            System.out.println("CONTINUTUL LUI XS: " + readFromExternalFile(getString(R.string.xsFile)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
 
         //we cancel the notification
-        NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-        manager.cancel(123);
+        //NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        //manager.cancel(123);
 
-        isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
-        writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
-        System.out.println("onResume -- INAINTE DE A INCEPE AFACEREA CU LOCATIA");
+        //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
+        //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
-        if (readFromInternalFile(getString(R.string.xsFile)) == "") { // TODO: 17/08/17 daca xs1 ii gol nici macar nu se va ajunge la response activity!! in viitor: cand ii gol, pur si simplu arat predictia
-            String prediction = readFromInternalFile(getString(R.string.predictionFile));
-
-            if(prediction == "" || prediction == null) {
-                loadMessage.setText("Not sufficient data.");
-                loading.setVisibility(View.GONE);
-            } else {
-                //dayTv.setText(prediction);
-                //dayTv.setVisibility(View.VISIBLE);
-                loading.setVisibility(View.GONE);
-
-                //String[] dayAndPrediction = prediction.split(" ");
-                //Double percentage = Double.parseDouble(dayAndPrediction[1]);
-                //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-                loadMessage.setText(prediction);
-                loadMessage.setTextSize(40);
+        String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
+        if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
+            System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
+            String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+            loading.setVisibility(View.GONE);
+            loadMessage.setText(prediction);
+            loadMessage.setTextSize(40);
+        } else {
+            try {
+                if (readFromExternalFile(getString(R.string.xsFile)) == "") {
+                    loadMessage.setText("Not sufficient data.");
+                    loading.setVisibility(View.GONE);
+                } else getLocation();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
         }
-        else {
-            getLocation();
+    }
+        /*
+        try {
+            if (readFromExternalFile(getString(R.string.xsFile)) == "") { // TODO: 17/08/17 daca xs1 ii gol nici macar nu se va ajunge la response activity!! in viitor: cand ii gol, pur si simplu arat predictia
+                String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+
+                if(prediction == "" || prediction == null) {
+                    loadMessage.setText("Not sufficient data.");
+                    loading.setVisibility(View.GONE);
+                } else {
+                    //dayTv.setText(prediction);
+                    //dayTv.setVisibility(View.VISIBLE);
+                    loading.setVisibility(View.GONE);
+
+                    //String[] dayAndPrediction = prediction.split(" ");
+                    //Double percentage = Double.parseDouble(dayAndPrediction[1]);
+                    //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
+                    loadMessage.setText(prediction);
+                    loadMessage.setTextSize(40);
+                }
+            } else {
+                getLocation();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 /*
@@ -315,7 +345,11 @@ public class ResponseActivity extends AppCompatActivity {
 
 
                 //we calculate averages of the CURRENT strips of hours
-                getArrayLists();
+                try { // TODO: 18/08/17 nu are nevoie de exceptie daca xs este un fisier intern. acum este extern
+                    getArrayLists();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 // CURRENT TEMP
                 double averageTemp = getAverage(tempsArray);
@@ -477,17 +511,31 @@ public class ResponseActivity extends AppCompatActivity {
             //InputStream testStream = new ByteArrayInputStream(testData.getBytes());
 
             protected void onPostExecute(String result) { //you receive the result as a parameter
-                System.out.print("Prediction done locally on the mobile with result ");
-                System.out.println(result);
+                System.out.println("================ON POST EXECUTE==================");
+                if (result != null) writeToInternalFile(getString(R.string.predictionDisplayFile),result); //String.valueOf(dayOfMonth) + " " +
+                writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3));
+                System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + readFromInternalFile(getString(R.string.predictionStripFile)));
+
+                //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
+                //dayTv.setVisibility(View.VISIBLE);
+                loading.setVisibility(View.GONE);
+
+                String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+                System.out.println("CONTINUTUL LUI PREDICTION DISPLAY FILE: " + prediction);
+                //String[] dayAndPrediction = prediction.split(" ");
+                //Double percentage = Double.parseDouble(dayAndPrediction[1]); //// TODO: 15/08/17 some error:  java.lang.NumberFormatException: Invalid double: "null"
+                //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
                 loadMessage.setText(result);
                 loadMessage.setTextSize(40);
-                loading.setVisibility(View.GONE);
-                System.out.println("ON POST EXECUTE");
+
+
+                System.out.print("Prediction done locally on the mobile with result ");
+                System.out.println(result);
             }
 
         }
 
-
+/*
         public class connectTask extends AsyncTask<String,String,TCPClient> {
 
 
@@ -524,16 +572,17 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            if (values[0] != null) writeToInternalFile(getString(R.string.predictionFile),values[0]); //String.valueOf(dayOfMonth) + " " +
-            writeToInternalFile(getString(R.string.predictionDayFile), dayOfMonth + "-" + month + "-" + year);
+            System.out.println("SE VA SCRIE IN PREDICTION DISPLAY FILE!!!!!!!!!!!!!!!");
+            if (values[0] != null) writeToInternalFile(getString(R.string.predictionDisplayFile),values[0]); //String.valueOf(dayOfMonth) + " " +
+            writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3));
+            System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + readFromInternalFile(getString(R.string.predictionStripFile)));
 
             //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
-
-            System.out.println("DESPUES DE SET TEXT");
             //dayTv.setVisibility(View.VISIBLE);
             loading.setVisibility(View.GONE);
 
-            String prediction = readFromInternalFile(getString(R.string.predictionFile));
+            String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+            System.out.println("CONTINUTUL LUI PREDICTION DISPLAY FILE: " + prediction);
             //String[] dayAndPrediction = prediction.split(" ");
             //Double percentage = Double.parseDouble(dayAndPrediction[1]); //// TODO: 15/08/17 some error:  java.lang.NumberFormatException: Invalid double: "null"
             //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
@@ -553,11 +602,10 @@ public class ResponseActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(TCPClient result){
             super.onPostExecute(result);
-            System.out.println("SE EXECUTA ON POST EXECUTE FUN");
             mTcpClient.stopClient();
 
         }
-    }
+    } */
 
     public String readFromExternalFile(String filename) throws IOException {
         String root = Environment.getExternalStorageDirectory().toString();
@@ -628,8 +676,9 @@ public class ResponseActivity extends AppCompatActivity {
         return ret;
     }
 
-    private void getArrayLists() {
-        String currentData = readFromInternalFile(getString(R.string.xsFile));
+    private void getArrayLists() throws IOException {
+        //String currentData = readFromInternalFile(getString(R.string.xsFile));
+        String currentData = readFromExternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
         durationInStrips = data.length;
 
@@ -638,18 +687,25 @@ public class ResponseActivity extends AppCompatActivity {
         humiditiesArray = new ArrayList<>();
         cloudsArray = new ArrayList<>();
         windArray = new ArrayList<>();
-        for (int i = 0; i < data.length; ++i) {
+        /*for (int i = 0; i < data.length; ++i) { TODO descomenteaza asta daca nu o sa mai avem nevoie de ora la care a fost luata fiecare mostra de current weather
             String[] sarr = data[i].split(" ");
             tempsArray.add(Double.parseDouble(sarr[0]));
             pressuresArray.add(Double.parseDouble(sarr[1]));
             humiditiesArray.add(Double.parseDouble(sarr[2]));
             cloudsArray.add(Double.parseDouble(sarr[3]));
             windArray.add(Double.parseDouble(sarr[4]));
+        } */
+
+        for (int i = 0; i < data.length; ++i) {
+            String[] sarr = data[i].split(" ");
+            tempsArray.add(Double.parseDouble(sarr[1]));
+            pressuresArray.add(Double.parseDouble(sarr[2]));
+            humiditiesArray.add(Double.parseDouble(sarr[3]));
+            cloudsArray.add(Double.parseDouble(sarr[4]));
+            windArray.add(Double.parseDouble(sarr[5]));
         }
-        writeToInternalFile(getString(R.string.xsFile), "");
+        writeToExternalFile(getString(R.string.xsFile), "", false);
     }
-
-
 
     private double getAverage(ArrayList<Double> arr) {
         Double sum = .0;

@@ -70,10 +70,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
@@ -172,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void commit(View view) {
         if (isNetworkAvailable()) {
-            writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
+            //writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
             int howWasYourDay = pB.getProgress();
             System.out.println("how was my day------------> " + howWasYourDay);
             Intent intent = new Intent(this, ResponseActivity.class);
@@ -302,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
                             (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                     AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
                     alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                            1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
+                            1000 * 20, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
                     try {
                         System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                     } catch (IOException e) {
