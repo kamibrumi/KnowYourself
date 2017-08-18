@@ -1,18 +1,30 @@
 package com.example.camelia.debug6;
 
+import android.Manifest;
+import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +62,10 @@ public class ResponseActivity extends AppCompatActivity {
     //String cityName;
     boolean isFromMain;
     int dayOfWeek, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
+    double lat, lon;
+    boolean isNetworkEnabled;
+    LocationManager locationManager;
+    Location location;
 
 
     @Override
@@ -106,7 +122,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
         else {
-            writeDataAndPredict();
+            getLocation();
         }
     }
 /*
@@ -123,25 +139,6 @@ public class ResponseActivity extends AppCompatActivity {
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run(){
-                System.out.println("WE WRITE DATA");
-
-                double latitude, longitude;
-                long cityId = 0;
-                String cityFile = null;
-                try {
-                    cityFile = readFromExternalFile(getString(R.string.idLatLonFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("CITYFILE CONTENT: " + cityFile);
-                String[] idll = cityFile.split(" ");
-                double lat, lon;
-                lat = Double.parseDouble(idll[0]);
-                lon = Double.parseDouble(idll[1]);
-
-                System.out.println("LAT&LON: " + lat + " " + lon);
-
                 URL = "http://api.openweathermap.org/data/2.5/find?lat=" + lat + "&lon=" + lon + "&cnt=1&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
                 //we use the current data link to retrieve the id of the city and use it to calculate the link of the forecast
                 String weatherData = null;
@@ -151,6 +148,7 @@ public class ResponseActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 JSONObject obj = null;
+                long cityId = 0;
                 try {
                     obj = new JSONObject(weatherData);
                     cityId = obj.getJSONArray("list").getJSONObject(0).getLong("id");
@@ -677,5 +675,101 @@ public class ResponseActivity extends AppCompatActivity {
     private double getStdDev(double variance)
     {
         return Math.sqrt(variance);
+    }
+
+    public void getLocation(){
+        System.out.println("A INTRAT IN ISLOCATION");
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        //boolean gps_enabled = false;
+        //boolean network_enabled = false;
+        System.out.println("");
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                System.out.println("ON LOCATION CHANGED");
+                locationManager.removeUpdates(this);
+
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        // Register the listener with the Location Manager to receive location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
+            toast.show();
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            //return;
+        }
+
+        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        if (isNetworkEnabled) {
+            System.out.println("NETWORK ENABLED");
+
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    0,
+                    0, locationListener);
+
+            if (locationManager != null) {
+                System.out.println("LOCATION MANAGER NOT NULL");
+                location = locationManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+                if (location != null) {
+                    System.out.println("LOCATION NOT NULL");
+
+                    lat = location.getLatitude();
+                    lon = location.getLongitude();
+                    System.out.println("LAT AND LON: " + lat + " " + lon);
+
+                    writeToExternalFile(getString(R.string.idLatLonFile), lat + " " + lon, false);
+                    try {
+                        System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    writeDataAndPredict();
+                }
+            }
+
+        } else {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setMessage("Enable your location for a while, pls.");
+            dialog.setTitle("Location Needed");
+            dialog.setCancelable(false);
+            dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+                    Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(myIntent);
+                    //get gps
+                }
+            });
+            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    // TODO Auto-generated method stub
+
+                }
+            });
+            dialog.show();
+        }
     }
 }

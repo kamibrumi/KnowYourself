@@ -39,8 +39,6 @@ import java.io.OutputStreamWriter;
 
 public class MainActivity extends AppCompatActivity {
     Button commitB;
-    Boolean answered;
-    int currentDay, answerDay;
     ProgressBar pB;
     boolean isNetworkEnabled;
     LocationManager locationManager;
@@ -60,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         //check whether the app is opened for the very first time. if the file "firstTime" do not exist, then the application is opened for the first time and we create it.
         if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
             writeToInternalFile(getString(R.string.firstTime), "false", this);
-            isLocation(true);
+            getLocation();
             System.out.println("APPLICATION FOR THE FIRST TIME");
 
         }
@@ -173,24 +171,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void commit(View view) {
-        String xsContent = readFromInternalFile(getString(R.string.xsFile));
-        if (xsContent == "" || xsContent == null) {
-            Toast toast = Toast.makeText(getApplicationContext(), "Still collecting weather data...", Toast.LENGTH_SHORT);
-            toast.show();
-        } else {
-            if (isNetworkAvailable()) {
-                if (isLocation(false)) {
-                    writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
-                    int howWasYourDay = pB.getProgress();
-                    System.out.println("how was my day------------> " + howWasYourDay);
-                    Intent intent = new Intent(this, ResponseActivity.class);
-                    intent.putExtra("how", String.valueOf(howWasYourDay));
-                    startActivity(intent);
-                } else {
-                    Toast toast = Toast.makeText(getApplicationContext(), "No Internet Connection!", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            }
+        if (isNetworkAvailable()) {
+            writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
+            int howWasYourDay = pB.getProgress();
+            System.out.println("how was my day------------> " + howWasYourDay);
+            Intent intent = new Intent(this, ResponseActivity.class);
+            intent.putExtra("how", String.valueOf(howWasYourDay));
+            startActivity(intent);
         }
     }
 
@@ -246,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public boolean isLocation(final boolean setAlarm){
+    public boolean getLocation(){
         System.out.println("A INTRAT IN ISLOCATION");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //boolean gps_enabled = false;
@@ -308,16 +295,14 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
                     writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
-                    if (setAlarm) {
-                        System.out.println("SE SETEAZA ALARMA");
-                        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-                        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                                1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
-                    }
+                    System.out.println("SE SETEAZA ALARMA");
+                    //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+                    Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                    PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                            (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                    alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+                            1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
                     try {
                         System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                     } catch (IOException e) {
