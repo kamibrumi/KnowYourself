@@ -32,11 +32,19 @@
         <service
             android:name=".MyNewIntentService"
             android:exported="false" />
-
+        <!--
         <receiver
             android:name=".WeatherReceiver"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            /> -->
+
+        <receiver android:name=".WeatherReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.HOME" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".CurrentWeatherIntentService"
