@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     Button commitB;
@@ -44,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
     LocationManager locationManager;
     Location location;
     Double latitude, longitude;
-    String idll;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -62,21 +62,38 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("APPLICATION FOR THE FIRST TIME");
 
         }
-        System.out.println("LAT SI LON IN ON CREATE: " + latitude + " " + longitude);
-        try {
-            System.out.println("CONTINUTUL LUI IDLATLON in on Create: " + readFromExternalFile(getString(R.string.idLatLonFile)));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        Calendar calendar = Calendar.getInstance();
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
+
+        Calendar cal = Calendar.getInstance();
+        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 30);
+        long millisLaunchService = cal.getTimeInMillis();
+
+        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService,
+                1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
     }
 
     @Override
     public void onResume() {
-        super.onResume();  // Always call the superclass method first
+        super.onResume();
+        String lastStripCollectedData = null;
         try {
-            idll = readFromExternalFile(getString(R.string.idLatLonFile));
+            lastStripCollectedData = readFromExternalFile(getString(R.string.currentDataStrip));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        Calendar calendar = Calendar.getInstance();
+        int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
+        if (lastStripCollectedData == null || currentStrip != Integer.parseInt(lastStripCollectedData)) {
+            Intent i = new Intent(getApplicationContext(), WeatherReceiver.class);
+            startService(i);
         }
     }
 
@@ -134,36 +151,38 @@ public class MainActivity extends AppCompatActivity {
 
         File file = new File (myDir, filename);
         //get InputStream of a file
-        InputStream is = new FileInputStream(file);
-        String strContent;
+        if (file.exists()) {
+            InputStream is = new FileInputStream(file);
+            String strContent;
 
                 /*
                  * There are several way to convert InputStream to String. First is using
                  * BufferedReader as given below.
                  */
 
-        //Create BufferedReader object
-        BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
-        StringBuffer sbfFileContents = new StringBuffer();
-        String line = null;
+            //Create BufferedReader object
+            BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
+            StringBuffer sbfFileContents = new StringBuffer();
+            String line = null;
 
-        if (bReader.readLine() == null) return null; // here **
-        //read file line by line
-        while( (line = bReader.readLine()) != null){
-            sbfFileContents.append(line);
-        }
+            if (bReader.readLine() == null) return null; // here **
+            //read file line by line
+            while( (line = bReader.readLine()) != null){
+                sbfFileContents.append(line);
+            }
 
-        //finally convert StringBuffer object to String!
-        strContent = sbfFileContents.toString();
+            //finally convert StringBuffer object to String!
+            strContent = sbfFileContents.toString();
 
                 /*
                  * Second and one liner approach is to use Scanner class. This is only supported
                  * in Java 1.5 and higher version.
                  */
 
-        //strContent = new Scanner(is).useDelimiter("\\A").next();
-        return strContent;
-
+            //strContent = new Scanner(is).useDelimiter("\\A").next();
+            return strContent;
+        }
+        return null;
     }
 
     public void commit(View view) {
@@ -232,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public boolean getLocation(){
+    public void getLocation(){
         System.out.println("A INTRAT IN ISLOCATION");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //boolean gps_enabled = false;
@@ -243,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 System.out.println("ON LOCATION CHANGED");
-                writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
                 locationManager.removeUpdates(this);
 
             }
@@ -294,6 +312,8 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
                     writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
+                    Intent i = new Intent(getApplicationContext(), WeatherReceiver.class);
+                    startService(i);
 
                     /*
                     System.out.println("SE SETEAZA ALARMA");
@@ -310,7 +330,6 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     } */
                 }
-                return true;
             }
 
         } else {
@@ -337,6 +356,5 @@ public class MainActivity extends AppCompatActivity {
             });
             dialog.show();
         }
-        return false;
     }
 }

@@ -99,11 +99,8 @@ public class CurrentWeatherIntentService extends IntentService{
 
             //writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius
             writeToExternalFile(getString(R.string.xsFile),hour + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", true); //we converted kelvin to celsius
-
-        } else {
-
+            writeToExternalFile(getString(R.string.currentDataStrip), String.valueOf(hour/3), false);
         }
-
 
         try {
             System.out.println("current weather= " + readFromExternalFile(getString(R.string.xsFile)));
