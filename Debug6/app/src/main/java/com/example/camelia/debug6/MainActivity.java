@@ -174,6 +174,9 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ResponseActivity.class);
             intent.putExtra("how", String.valueOf(howWasYourDay));
             startActivity(intent);
+        } else {
+            Toast toast = Toast.makeText(this, "No internet connection!", Toast.LENGTH_SHORT);
+            toast.show();
         }
     }
 
@@ -291,6 +294,8 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
                     writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
+
+                    /*
                     System.out.println("SE SETEAZA ALARMA");
                     //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
                     Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
@@ -303,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }
+                    } */
                 }
                 return true;
             }
