@@ -15,5 +15,7 @@ public class WeatherReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Intent i = new Intent(context, CurrentWeatherIntentService.class);
         context.startService(i);
+        System.out.println("WEATHER RECEIVEEEEEER");
+        // TODO: 20/08/17 daca se schimba situatia la wi-fi nu se verifica daca s-au luat date sau nu la stripul actual 
     }
 }

@@ -1,11 +1,7 @@
 package com.example.camelia.intentservicetest;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import java.util.Calendar;
-import android.icu.util.GregorianCalendar;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;

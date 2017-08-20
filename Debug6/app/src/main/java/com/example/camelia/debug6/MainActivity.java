@@ -68,9 +68,9 @@ public class MainActivity extends AppCompatActivity {
         int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
 
         Calendar cal = Calendar.getInstance();
-        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 30);
+        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 30); //FIRST HOUR AND A HALF FROM THE NEXT STRIP
         long millisLaunchService = cal.getTimeInMillis();
-
+        System.out.println("se seteaza ALAAAAAARM!");
         //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
         Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
         PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Calendar calendar = Calendar.getInstance();
         int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
-        if (lastStripCollectedData == null || currentStrip != Integer.parseInt(lastStripCollectedData)) {
+        if (lastStripCollectedData == null || lastStripCollectedData == "" || currentStrip != Integer.parseInt(lastStripCollectedData)) {
             Intent i = new Intent(getApplicationContext(), WeatherReceiver.class);
             startService(i);
         }
@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProviderDisabled(String provider) {
             }
         };
-
+        System.out.println("S-A DECLARAT LISTENER-UL DIN LOCATION");
         // Register the listener with the Location Manager to receive location updates
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -312,9 +312,9 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
                     writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
-                    Intent i = new Intent(getApplicationContext(), WeatherReceiver.class);
+                    Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
                     startService(i);
-
+                    System.out.println("AM TRIMIS INTENTUL LA SERVICE");
                     /*
                     System.out.println("SE SETEAZA ALARMA");
                     //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
@@ -333,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {
+            System.out.println("A INTRAT IN ELSE, SE VA CREA DIALOGUL");
             AlertDialog.Builder dialog = new AlertDialog.Builder(this);
             dialog.setMessage("Enable your location for a while, pls.");
             dialog.setTitle("Location Needed");
@@ -343,7 +344,6 @@ public class MainActivity extends AppCompatActivity {
                     // TODO Auto-generated method stub
                     Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                     startActivity(myIntent);
-                    //get gps
                 }
             });
             dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -356,5 +356,6 @@ public class MainActivity extends AppCompatActivity {
             });
             dialog.show();
         }
+        System.out.println("SE TERMINA GETLOCATION");
     }
 }
