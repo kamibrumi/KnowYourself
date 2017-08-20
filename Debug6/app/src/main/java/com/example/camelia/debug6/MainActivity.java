@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
         if (lastStripCollectedData == null || lastStripCollectedData == "" || currentStrip != Integer.parseInt(lastStripCollectedData)) {
-            Intent i = new Intent(getApplicationContext(), WeatherReceiver.class);
+            Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
             startService(i);
         }
     }
