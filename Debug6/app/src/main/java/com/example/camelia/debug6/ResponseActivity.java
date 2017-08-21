@@ -1,6 +1,7 @@
 package com.example.camelia.debug6;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
@@ -22,6 +23,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,6 +70,11 @@ public class ResponseActivity extends AppCompatActivity {
     boolean isNetworkEnabled;
     LocationManager locationManager;
     Location location;
+    String[] strips;
+    Double[] happinessLevels;
+    Integer[] imageId;
+    int NUMBER_OF_STRIPS_TO_PREDICT = 24;
+    ListView list;
 
 
     @Override
@@ -76,6 +84,7 @@ public class ResponseActivity extends AppCompatActivity {
         loadMessage = (TextView) findViewById(R.id.loadMessage);
         loading = (ProgressBar) findViewById(R.id.loading);
         dayTv = (TextView) findViewById(R.id.dayTv);
+        list =(ListView)findViewById(R.id.list);
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
@@ -116,6 +125,20 @@ public class ResponseActivity extends AppCompatActivity {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
             String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
             loading.setVisibility(View.GONE);
+
+            CustomList adapter = new
+                    CustomList(this, strips, happinessLevels, imageId); //// TODO: 21/08/17 trebuie sa fac ca in post execute sa salvez inr-un string atat array-ul de imagini cat si cel de stripuri si happiness levels 
+            list.setAdapter(adapter);
+            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view,
+                                        int position, long id) {
+                    //Toast.makeText(ResponseActivity.this, "You Clicked at " + [+ position], Toast.LENGTH_SHORT).show();
+
+                }
+            });
+            
             loadMessage.setText(prediction);
             loadMessage.setTextSize(40);
         } else {
@@ -248,14 +271,17 @@ public class ResponseActivity extends AppCompatActivity {
                 double futureAverageWind = 0;
 
                 ArrayList<Double> futureWind = new ArrayList<Double>();
+                strips = new String[NUMBER_OF_STRIPS_TO_PREDICT];
 
-                for (int i = 0; i < 24; i++) {
+                for (int i = 0; i < NUMBER_OF_STRIPS_TO_PREDICT; i++) {
                     String dt = null;
                     try {
                         dt = arr.getJSONObject(i).getString("dt_txt");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+
+                    strips[i] = dt;
 
                     Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*");
                     Matcher m = p.matcher(dt);
@@ -394,7 +420,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         System.out.println("INAINTE DE LOCALMODELTASK.EXECUTE");
         // connect to the server
-        new LocalModelTask().execute();
+        new LocalModelTask().execute(this);
         //new connectTask().execute("commit");
 
     /*    System.out.println("FIRST COMMIT");
@@ -451,11 +477,13 @@ public class ResponseActivity extends AppCompatActivity {
     }
 
 
-        public class LocalModelTask extends AsyncTask<Void,Void,String> {
+        public class LocalModelTask extends AsyncTask<Activity,Void,String> {
+            Activity myResponseActivity;
 
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
-            protected String doInBackground(Void... voids) {
+            protected String doInBackground(Activity... activities) {
+                myResponseActivity = activities[0];
                 System.out.println("A INTRAT IN DO IN BACKGROUND");
                 DelimitedTextParser parser = new DelimitedTextParser();
                 //parser.setResponseIndex(new NumericAttribute("goodBad"), 1); //the second attr is the gb
@@ -495,9 +523,19 @@ public class ResponseActivity extends AppCompatActivity {
                     int maxNodes = 100;
                     RegressionTree tree = new RegressionTree(x, y, maxNodes);
                     int error = 0;
+                    happinessLevels = new Double[testx.length];
+                    imageId = new Integer[testx.length];
                     for (int i = 0; i < testx.length; i++) {
                         String resultToAppend = tree.predict(testx[i]) + " ";
                         result = result + resultToAppend + " ";
+                        Double level = Double.parseDouble(resultToAppend);
+                        happinessLevels[i] = level;
+                        if (level < 20.) imageId[i] = R.mipmap.very_sad;
+                        else if (level < 40.) imageId[i] = R.mipmap.sad;
+                        else if (level < 60.) imageId[i] = R.mipmap.neutral;
+                        else if (level < 80.) imageId[i] = R.mipmap.happy;
+                        else imageId[i] = R.mipmap.very_happy;
+
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -520,15 +558,27 @@ public class ResponseActivity extends AppCompatActivity {
                 //dayTv.setVisibility(View.VISIBLE);
                 loading.setVisibility(View.GONE);
 
-                String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
-                System.out.println("CONTINUTUL LUI PREDICTION DISPLAY FILE: " + prediction);
+                //String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
                 //String[] dayAndPrediction = prediction.split(" ");
                 //Double percentage = Double.parseDouble(dayAndPrediction[1]); //// TODO: 15/08/17 some error:  java.lang.NumberFormatException: Invalid double: "null"
                 //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-                loadMessage.setText(result);
-                loadMessage.setTextSize(40);
+                //loadMessage.setText(result);
+                //loadMessage.setTextSize(40);
 
 
+                CustomList adapter = new
+                        CustomList(myResponseActivity, strips, happinessLevels, imageId);
+                list.setAdapter(adapter);
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        //Toast.makeText(ResponseActivity.this, "You Clicked at " + [+ position], Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+                
                 System.out.print("Prediction done locally on the mobile with result ");
                 System.out.println(result);
             }
@@ -704,7 +754,7 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[4]));
             windArray.add(Double.parseDouble(sarr[5]));
         }
-        writeToExternalFile(getString(R.string.xsFile), "", false);
+        //writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
     }
 
     private double getAverage(ArrayList<Double> arr) {

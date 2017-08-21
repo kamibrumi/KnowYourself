@@ -1,4 +1,4 @@
-package com.example.camelia.listview;
+package com.example.camelia.debug6;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -8,14 +8,16 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
+
 public class CustomList extends ArrayAdapter<String>{
 
     private final Activity context;
     private final String[] strips;
-    private final String[] happinessLevels;
+    private final Double[] happinessLevels;
     private final Integer[] imageId;
     public CustomList(Activity context,
-                      String[] strips, String[] happinessLevels, Integer[] imageId) {
+                      String[] strips, Double[] happinessLevels, Integer[] imageId) {
         super(context, R.layout.list_item, strips);
         this.context = context;
         this.strips = strips;
@@ -32,7 +34,7 @@ public class CustomList extends ArrayAdapter<String>{
 
         ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
         firstLine.setText(strips[position]);
-        secondLine.setText(happinessLevels[position]);
+        secondLine.setText(new DecimalFormat("#0.0").format(happinessLevels[position]) + "% GOOD");
 
         imageView.setImageResource(imageId[position]);
         return rowView;
