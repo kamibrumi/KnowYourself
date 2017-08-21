@@ -140,17 +140,6 @@ public class CurrentWeatherIntentService extends IntentService{
         }
     }
 
-    private void writeToFile(String fileName, String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
-            outputStreamWriter.write(data + '\n');
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    }
-
     public String readFromExternalFile(String filename) throws IOException {
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/docs");

@@ -2,7 +2,6 @@ package com.example.camelia.debug6;
 
 
 import android.Manifest;
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -117,12 +116,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void writeToExternalFile(String filename, String data, Boolean append) {
-        /*
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, "data.txt"); */
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/docs");
         myDir.mkdirs();
@@ -153,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         //get InputStream of a file
         if (file.exists()) {
             InputStream is = new FileInputStream(file);
-            String strContent;
+            String strContent = "";
 
                 /*
                  * There are several way to convert InputStream to String. First is using
@@ -165,11 +158,15 @@ public class MainActivity extends AppCompatActivity {
             StringBuffer sbfFileContents = new StringBuffer();
             String line = null;
 
-            if (bReader.readLine() == null) return null; // here **
-            //read file line by line
-            while( (line = bReader.readLine()) != null){
+            if ((line = bReader.readLine()) == null) return null; // here **
+            else {
                 sbfFileContents.append(line);
+                //read file line by line
+                while( (line = bReader.readLine()) != null){
+                    sbfFileContents.append(line);
+                }
             }
+
 
             //finally convert StringBuffer object to String!
             strContent = sbfFileContents.toString();
@@ -199,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String readFromInternalFile(String fileName) {
+    private String readFromInternalFile(String fileName) { // TODO: 21/08/17 this method is different than the readFromInternalFile from the WriteAndReadFile class 
 
         String ret = "";
 
