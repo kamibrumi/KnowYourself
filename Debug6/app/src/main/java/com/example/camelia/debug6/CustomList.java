@@ -14,10 +14,10 @@ public class CustomList extends ArrayAdapter<String>{
 
     private final Activity context;
     private final String[] strips;
-    private final Double[] happinessLevels;
+    private final String[] happinessLevels;
     private final Integer[] imageId;
     public CustomList(Activity context,
-                      String[] strips, Double[] happinessLevels, Integer[] imageId) {
+                      String[] strips, String[] happinessLevels, Integer[] imageId) {
         super(context, R.layout.list_item, strips);
         this.context = context;
         this.strips = strips;
@@ -34,7 +34,8 @@ public class CustomList extends ArrayAdapter<String>{
 
         ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
         firstLine.setText(strips[position]);
-        secondLine.setText(new DecimalFormat("#0.0").format(happinessLevels[position]) + "% GOOD");
+        //secondLine.setText(new DecimalFormat("#0.0").format(happinessLevels[position]) + "% GOOD");
+        secondLine.setText(happinessLevels[position] + "% PRODUCTIVE");
 
         imageView.setImageResource(imageId[position]);
         return rowView;

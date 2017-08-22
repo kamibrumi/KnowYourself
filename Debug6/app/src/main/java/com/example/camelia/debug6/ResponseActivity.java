@@ -71,10 +71,11 @@ public class ResponseActivity extends AppCompatActivity {
     LocationManager locationManager;
     Location location;
     String[] strips;
-    Double[] happinessLevels;
+    String[] happinessLevels;
     Integer[] imageId;
     int NUMBER_OF_STRIPS_TO_PREDICT = 24;
     ListView list;
+    String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 
     @Override
@@ -123,8 +124,28 @@ public class ResponseActivity extends AppCompatActivity {
         String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
-            String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
             loading.setVisibility(View.GONE);
+            loadMessage.setVisibility(View.GONE);
+
+            imageId = new Integer[NUMBER_OF_STRIPS_TO_PREDICT];
+
+            String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+            System.out.println("PREDICTION: " + prediction);
+            String[] dataToDisplay = prediction.split("split");
+            System.out.println("happy levels!!!!!!!!!!!: " + dataToDisplay[1]);
+            System.out.println("days!!!!!!!!!!!: " + dataToDisplay[0]);
+            System.out.println("images!!!!!!!!!!!: " + dataToDisplay[2]);
+
+            strips = dataToDisplay[0].split("finStrip");
+            for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
+
+            happinessLevels = dataToDisplay[1].split(" ");
+            //String[] preHappinessLevels = dataToDisplay[1].split(" ");
+            String[] preImageId = dataToDisplay[2].split(" ");
+            for (int j = 0; j < preImageId.length; ++j) {
+                //happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
+                imageId[j] = Integer.parseInt(preImageId[j]);
+            }
 
             CustomList adapter = new
                     CustomList(this, strips, happinessLevels, imageId); //// TODO: 21/08/17 trebuie sa fac ca in post execute sa salvez inr-un string atat array-ul de imagini cat si cel de stripuri si happiness levels 
@@ -139,8 +160,8 @@ public class ResponseActivity extends AppCompatActivity {
                 }
             });
             
-            loadMessage.setText(prediction);
-            loadMessage.setTextSize(40);
+            //loadMessage.setText(prediction);
+            //loadMessage.setTextSize(40);
         } else {
             try {
                 if (readFromExternalFile(getString(R.string.xsFile)) == "") {
@@ -271,6 +292,7 @@ public class ResponseActivity extends AppCompatActivity {
                 double futureAverageWind = 0;
 
                 ArrayList<Double> futureWind = new ArrayList<Double>();
+
                 strips = new String[NUMBER_OF_STRIPS_TO_PREDICT];
 
                 for (int i = 0; i < NUMBER_OF_STRIPS_TO_PREDICT; i++) {
@@ -280,8 +302,6 @@ public class ResponseActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-                    strips[i] = dt;
 
                     Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*");
                     Matcher m = p.matcher(dt);
@@ -306,6 +326,9 @@ public class ResponseActivity extends AppCompatActivity {
                         int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
                         int futureStripId = hour/3;
                         int futureDurationInStrips = i + 1;
+
+                        strips[i] = weekDayStrings[predictionDayOfWeek] + " " + hour + "h";
+
                         JSONObject main = null;
                         Double t = 25.;
                         Double pressure = 1020.;
@@ -490,6 +513,7 @@ public class ResponseActivity extends AppCompatActivity {
                 String trainingData, testData;
                 trainingData = testData = null;
                 String result = "";
+                String imageIdString = "";
                 System.out.println("INAINTE DE TRY");
                 try {
                     int numberOfVariables = getApplicationContext().getResources().getInteger(R.integer.numberOfVariables);
@@ -523,23 +547,30 @@ public class ResponseActivity extends AppCompatActivity {
                     int maxNodes = 100;
                     RegressionTree tree = new RegressionTree(x, y, maxNodes);
                     int error = 0;
-                    happinessLevels = new Double[testx.length];
+                    happinessLevels = new String[testx.length];
                     imageId = new Integer[testx.length];
                     for (int i = 0; i < testx.length; i++) {
-                        String resultToAppend = tree.predict(testx[i]) + " ";
+                        String resultToAppend = tree.predict(testx[i]) + "";
                         result = result + resultToAppend + " ";
                         Double level = Double.parseDouble(resultToAppend);
-                        happinessLevels[i] = level;
+                        happinessLevels[i] = resultToAppend;
                         if (level < 20.) imageId[i] = R.mipmap.very_sad;
                         else if (level < 40.) imageId[i] = R.mipmap.sad;
                         else if (level < 60.) imageId[i] = R.mipmap.neutral;
                         else if (level < 80.) imageId[i] = R.mipmap.happy;
                         else imageId[i] = R.mipmap.very_happy;
+                        imageIdString += String.valueOf(imageId[i]) + " ";
 
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                String stripsString = "";
+                for (int k = 0; k < strips.length; ++k) {
+                    stripsString += strips[k] + "finStrip";
+                }
+
+                writeToInternalFile(getString(R.string.predictionDisplayFile), stripsString + "split" + result + "split" + imageIdString);
 
                 return result;
             }
@@ -550,13 +581,13 @@ public class ResponseActivity extends AppCompatActivity {
 
             protected void onPostExecute(String result) { //you receive the result as a parameter
                 System.out.println("================ON POST EXECUTE==================");
-                if (result != null) writeToInternalFile(getString(R.string.predictionDisplayFile),result); //String.valueOf(dayOfMonth) + " " +
                 writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3));
                 System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + readFromInternalFile(getString(R.string.predictionStripFile)));
 
                 //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
                 //dayTv.setVisibility(View.VISIBLE);
                 loading.setVisibility(View.GONE);
+                loadMessage.setVisibility(View.GONE);
 
                 //String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
                 //String[] dayAndPrediction = prediction.split(" ");
@@ -564,7 +595,6 @@ public class ResponseActivity extends AppCompatActivity {
                 //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
                 //loadMessage.setText(result);
                 //loadMessage.setTextSize(40);
-
 
                 CustomList adapter = new
                         CustomList(myResponseActivity, strips, happinessLevels, imageId);
@@ -754,7 +784,7 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[4]));
             windArray.add(Double.parseDouble(sarr[5]));
         }
-        //writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
+        writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
     }
 
     private double getAverage(ArrayList<Double> arr) {
