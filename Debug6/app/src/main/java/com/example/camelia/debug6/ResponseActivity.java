@@ -71,7 +71,7 @@ public class ResponseActivity extends AppCompatActivity {
     LocationManager locationManager;
     Location location;
     String[] strips;
-    String[] happinessLevels;
+    Double[] happinessLevels;
     Integer[] imageId;
     int NUMBER_OF_STRIPS_TO_PREDICT = 24;
     ListView list;
@@ -127,6 +127,7 @@ public class ResponseActivity extends AppCompatActivity {
             loading.setVisibility(View.GONE);
             loadMessage.setVisibility(View.GONE);
 
+            happinessLevels = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
             imageId = new Integer[NUMBER_OF_STRIPS_TO_PREDICT];
 
             String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
@@ -139,11 +140,10 @@ public class ResponseActivity extends AppCompatActivity {
             strips = dataToDisplay[0].split("finStrip");
             for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
 
-            happinessLevels = dataToDisplay[1].split(" ");
-            //String[] preHappinessLevels = dataToDisplay[1].split(" ");
+            String[] preHappinessLevels = dataToDisplay[1].split(" ");
             String[] preImageId = dataToDisplay[2].split(" ");
             for (int j = 0; j < preImageId.length; ++j) {
-                //happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
+                happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
                 imageId[j] = Integer.parseInt(preImageId[j]);
             }
 
@@ -547,13 +547,13 @@ public class ResponseActivity extends AppCompatActivity {
                     int maxNodes = 100;
                     RegressionTree tree = new RegressionTree(x, y, maxNodes);
                     int error = 0;
-                    happinessLevels = new String[testx.length];
+                    happinessLevels = new Double[testx.length];
                     imageId = new Integer[testx.length];
                     for (int i = 0; i < testx.length; i++) {
                         String resultToAppend = tree.predict(testx[i]) + "";
                         result = result + resultToAppend + " ";
                         Double level = Double.parseDouble(resultToAppend);
-                        happinessLevels[i] = resultToAppend;
+                        happinessLevels[i] = level;
                         if (level < 20.) imageId[i] = R.mipmap.very_sad;
                         else if (level < 40.) imageId[i] = R.mipmap.sad;
                         else if (level < 60.) imageId[i] = R.mipmap.neutral;
