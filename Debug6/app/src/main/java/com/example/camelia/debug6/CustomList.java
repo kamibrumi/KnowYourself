@@ -34,7 +34,7 @@ public class CustomList extends ArrayAdapter<String>{
 
         ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
         firstLine.setText(strips[position]);
-        secondLine.setText(new DecimalFormat("#0.0").format(happinessLevels[position]) + "% PRODUCTIVE");
+        secondLine.setText(new DecimalFormat("#0").format(happinessLevels[position]) + "% PRODUCTIVE");
         //secondLine.setText(happinessLevels[position] + "% PRODUCTIVE");
 
         imageView.setImageResource(imageId[position]);
