@@ -326,8 +326,8 @@ public class ResponseActivity extends AppCompatActivity {
                         int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
                         int futureStripId = hour/3;
                         int futureDurationInStrips = i + 1;
-
-                        strips[i] = weekDayStrings[predictionDayOfWeek] + " " + hour + "h";
+                        System.out.println("PREDICION_DAY_OF_WEEK: " + predictionDayOfWeek);
+                        strips[i] = weekDayStrings[predictionDayOfWeek - 1] + " " + hour + "h"; // TODO: 23/08/17 Error!! length=7; index=7. Actializat- vezi daca va mai da probleme!!
 
                         JSONObject main = null;
                         Double t = 25.;
