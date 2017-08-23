@@ -1,16 +1,16 @@
 package com.example.camelia.debug6;
 
 
-import android.Manifest;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -19,13 +19,22 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,10 +49,7 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
     Button commitB;
     ProgressBar pB;
-    boolean isNetworkEnabled;
-    LocationManager locationManager;
-    Location location;
-    Double latitude, longitude;
+    protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -57,11 +63,38 @@ public class MainActivity extends AppCompatActivity {
         //check whether the app is opened for the very first time. if the file "firstTime" do not exist, then the application is opened for the first time and we create it.
         if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
             writeToInternalFile(getString(R.string.firstTime), "false", this);
-            getLocation();
-            System.out.println("APPLICATION FOR THE FIRST TIME");
+            LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if (!isNetworkEnabled) {
+                /*
+                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                dialog.setMessage("Enable your location for a while, pls.");
+                dialog.setTitle("Location Needed");
+                dialog.setCancelable(false);
+                dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(myIntent);
+                        //get gps
+                    }
+                });
+                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        // TODO Auto-generated method stub
+
+                    }
+                });
+                dialog.show(); */
+                displayLocationSettingsRequest(this);
+            }
 
         }
 
+        // we calculate the hour when we are going to launch the alarm to retrieve the weather data!
         Calendar calendar = Calendar.getInstance();
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
@@ -82,6 +115,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+
+        BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // Get extra data included in the Intent
+                //String message = intent.getStringExtra("Status");
+                Bundle b = intent.getBundleExtra("Location");
+                Location lastKnownLoc = (Location) b.getParcelable("Location");
+                if (lastKnownLoc != null) {
+                    writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
+                }
+                //tvStatus.setText(message);
+                // Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
+
+
         String lastStripCollectedData = null;
         try {
             lastStripCollectedData = readFromExternalFile(getString(R.string.currentDataStrip));
@@ -201,17 +254,12 @@ public class MainActivity extends AppCompatActivity {
         String ret = "";
 
         try {
-            System.out.println("000000000000000000000000");
             InputStream inputStream = this.openFileInput(fileName);
-            System.out.println("11111111111111111111111111111111");
 
 
             if ( inputStream != null ) {
-                System.out.println("222222222222222222222222");
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                System.out.println("3333333333333333333333");
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                System.out.println("444444444444444444444444444");
                 String receiveString = "";
                 StringBuilder stringBuilder = new StringBuilder();
 
@@ -248,111 +296,44 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public void getLocation(){
-        System.out.println("A INTRAT IN ISLOCATION");
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        //boolean gps_enabled = false;
-        //boolean network_enabled = false;
-        System.out.println("");
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                System.out.println("ON LOCATION CHANGED");
-                locationManager.removeUpdates(this);
+    private void displayLocationSettingsRequest(Context context) {
+        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(LocationServices.API).build();
+        googleApiClient.connect();
 
-            }
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
 
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
 
-            public void onProviderEnabled(String provider) {
-            }
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        Log.i("SUCCESS", "All location settings are satisfied.");
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        Log.i("RESOLUTION_REQUIRED", "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
 
-            public void onProviderDisabled(String provider) {
-            }
-        };
-        System.out.println("S-A DECLARAT LISTENER-UL DIN LOCATION");
-        // Register the listener with the Location Manager to receive location updates
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
-            toast.show();
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            //return;
-        }
-
-        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        if (isNetworkEnabled) {
-            System.out.println("NETWORK ENABLED");
-
-            locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    0,
-                    0, locationListener);
-
-            if (locationManager != null) {
-                System.out.println("LOCATION MANAGER NOT NULL");
-                location = locationManager
-                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-                if (location != null) {
-                    System.out.println("LOCATION NOT NULL");
-
-                    latitude = location.getLatitude();
-                    longitude = location.getLongitude();
-                    System.out.println("LAT AND LON: " + latitude + " " + longitude);
-
-                    writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
-                    Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
-                    startService(i);
-                    System.out.println("AM TRIMIS INTENTUL LA SERVICE");
-                    /*
-                    System.out.println("SE SETEAZA ALARMA");
-                    //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-                    Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-                    PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                            (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                    AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                    alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-                            1000 * 3 * 60 * 60, weatherPendingIntent); //TODO put frequency of currentWeather data (current every 3h) //1000 * 3 * 60 * 60
-                    try {
-                        System.out.println("CONTINUTUL LUI IDLATLON: " + readFromExternalFile(getString(R.string.idLatLonFile)));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } */
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS); // TODO: 23/08/17 if there is an error this may be the cause! (the constant REQUEST_CHECK_SETTINGS)
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i("SendIntentException", "PendingIntent unable to execute request.");
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Log.i("CHANGE_UNAVAILABLE", "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
+                        break;
                 }
             }
-
-        } else {
-            System.out.println("A INTRAT IN ELSE, SE VA CREA DIALOGUL");
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-            dialog.setMessage("Enable your location for a while, pls.");
-            dialog.setTitle("Location Needed");
-            dialog.setCancelable(false);
-            dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                    // TODO Auto-generated method stub
-                    Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivity(myIntent);
-                }
-            });
-            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                    // TODO Auto-generated method stub
-
-                }
-            });
-            dialog.show();
-        }
-        System.out.println("SE TERMINA GETLOCATION");
+        });
     }
 }
