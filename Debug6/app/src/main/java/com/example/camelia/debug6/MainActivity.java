@@ -3,9 +3,12 @@ package com.example.camelia.debug6;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -13,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -49,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     int currentHour;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,35 +61,16 @@ public class MainActivity extends AppCompatActivity {
         pB = (ProgressBar) findViewById(R.id.progressBar);
 
         //check whether the app is opened for the very first time. if the file "firstTime" do not exist, then the application is opened for the first time and we create it.
-        if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
+        //if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
+        if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))) {
             writeToInternalFile(getString(R.string.firstTime), "false", this);
             LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             if (!isNetworkEnabled) {
-                /*
-                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                dialog.setMessage("Enable your location for a while, pls.");
-                dialog.setTitle("Location Needed");
-                dialog.setCancelable(false);
-                dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                        // TODO Auto-generated method stub
-                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        startActivity(myIntent);
-                        //get gps
-                    }
-                });
-                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
-                        // TODO Auto-generated method stub
-
-                    }
-                });
-                dialog.show(); */
                 displayLocationSettingsRequest(this);
+            } else {
+                Intent i = new Intent(this, LocationService.class);
+                this.startService(i);
             }
 
         }
@@ -97,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
 
         Calendar cal = Calendar.getInstance();
-        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 30); //FIRST HOUR AND A HALF FROM THE NEXT STRIP
+        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 0); //FIRST HOUR OF THE NEXT STRIP
         long millisLaunchService = cal.getTimeInMillis();
         System.out.println("se seteaza ALAAAAAARM!");
         //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
@@ -112,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        /*  WE DON'T REALLY NEED THE BROADCAST RECEIVER TO RECEIVE THE LOCATION FROM THE LOCATION SERVICE. WE JUST WRITE THE LOCATION IN A FILE IN THE SERVICE.
+
         BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -122,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
                 Location lastKnownLoc = (Location) b.getParcelable("Location");
                 if (lastKnownLoc != null) {
                     writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
+                    System.out.println("SE IA CURRENT WEATHER MULTUMITA LA BROADCAST RECEIVER");
+                    collectCurrentWeather();
                 }
                 //tvStatus.setText(message);
                 // Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
@@ -131,7 +117,17 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
 
-        */
+        try {
+            if (readFromExternalFile(getString(R.string.idLatLonFile)) != null) {
+                System.out.println("ID LAT LON FILE IS NOT NULL (S-A INTRAT IN IF-UL DIN ONRESUME)");
+                collectCurrentWeather();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void collectCurrentWeather() {
         String lastStripCollectedData = null;
         try {
             lastStripCollectedData = readFromExternalFile(getString(R.string.currentDataStrip));
@@ -141,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
         if (lastStripCollectedData == null || lastStripCollectedData == "" || currentStrip != Integer.parseInt(lastStripCollectedData)) {
+            System.out.println("AR TREBUI SA SE LANSEZE SERVICIUL DE CURRENT WEATHER");
             Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
             startService(i);
         }

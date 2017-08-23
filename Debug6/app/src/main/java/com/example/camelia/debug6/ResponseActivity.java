@@ -6,9 +6,11 @@ import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -20,6 +22,7 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -145,7 +148,27 @@ public class ResponseActivity extends AppCompatActivity {
                 if (readFromExternalFile(getString(R.string.xsFile)) == "") {
                     loadMessage.setText("Not sufficient data.");
                     loading.setVisibility(View.GONE);
-                } else writeDataAndPredict();
+                } else {
+                    BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+                        @Override
+                        public void onReceive(Context context, Intent intent) {
+                            // Get extra data included in the Intent
+                            //String message = intent.getStringExtra("Status");
+                            Bundle b = intent.getBundleExtra("Location");
+                            Location lastKnownLoc = (Location) b.getParcelable("Location");
+                            if (lastKnownLoc != null) {
+                                writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
+                                System.out.println("write data and predict in RESPONSE ACTIVITY (AR TREBUI SA SE INTAMPLE ASTA SUPA CE SE OBTINE LOCATIA)");
+                                writeDataAndPredict();
+                            }
+                            //tvStatus.setText(message);
+                            // Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                        }
+                    };
+
+                    LocalBroadcastManager.getInstance(this).registerReceiver(
+                            mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
