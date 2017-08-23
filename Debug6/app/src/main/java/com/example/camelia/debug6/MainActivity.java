@@ -2,30 +2,24 @@ package com.example.camelia.debug6;
 
 
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.IntentSender;
-import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -35,6 +29,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,11 +40,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Calendar;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     Button commitB;
     ProgressBar pB;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
+    int currentHour;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -96,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         // we calculate the hour when we are going to launch the alarm to retrieve the weather data!
         Calendar calendar = Calendar.getInstance();
-        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
 
         Calendar cal = Calendar.getInstance();
@@ -115,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-
+        /*  WE DON'T REALLY NEED THE BROADCAST RECEIVER TO RECEIVE THE LOCATION FROM THE LOCATION SERVICE. WE JUST WRITE THE LOCATION IN A FILE IN THE SERVICE.
         BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -134,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
 
-
+        */
         String lastStripCollectedData = null;
         try {
             lastStripCollectedData = readFromExternalFile(getString(R.string.currentDataStrip));
@@ -235,17 +232,33 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void commit(View view) {
-        if (isNetworkAvailable()) {
-            //writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
-            int howWasYourDay = pB.getProgress();
-            System.out.println("how was my day------------> " + howWasYourDay);
+        int howWasYourDay = pB.getProgress();
+
+        String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
+        if (Objects.equals(predictionStrip, String.valueOf(currentHour / 3))) {
             Intent intent = new Intent(this, ResponseActivity.class);
             intent.putExtra("how", String.valueOf(howWasYourDay));
             startActivity(intent);
         } else {
-            Toast toast = Toast.makeText(this, "No internet connection!", Toast.LENGTH_SHORT);
-            toast.show();
+            if (isNetworkAvailable()) {
+                LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+                Boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+                if(isNetworkEnabled) {
+                    Intent locationService = new Intent(this, LocationService.class);
+                    startService(locationService);
+                    //writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
+                    System.out.println("how was my day------------> " + howWasYourDay);
+                    Intent intent = new Intent(this, ResponseActivity.class);
+                    intent.putExtra("how", String.valueOf(howWasYourDay));
+                    startActivity(intent);
+                } else displayLocationSettingsRequest(this);
+            } else {
+                Toast toast = Toast.makeText(this, "No internet connection!", Toast.LENGTH_SHORT);
+                toast.show();
+            }
         }
     }
 
