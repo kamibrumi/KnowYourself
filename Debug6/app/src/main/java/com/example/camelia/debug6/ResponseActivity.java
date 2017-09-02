@@ -57,6 +57,7 @@ import java.util.regex.Pattern;
 import smile.data.parser.DelimitedTextParser;
 import smile.data.*;
 import smile.RegressionTree;
+import java.lang.Math;
 
 public class ResponseActivity extends AppCompatActivity {
     //private static String URL = "http://api.openweathermap.org/data/2.5/forecast?q=Barcelona,es&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
@@ -795,7 +796,7 @@ public class ResponseActivity extends AppCompatActivity {
             windArray.add(Double.parseDouble(sarr[4]));
         } */
 
-        for (int i = 0; i < data.length; ++i) {
+        for (int i = Math.max(0, durationInStrips - 3); i < data.length; ++i) {
             String[] sarr = data[i].split(" ");
             tempsArray.add(Double.parseDouble(sarr[1]));
             pressuresArray.add(Double.parseDouble(sarr[2]));
@@ -803,6 +804,8 @@ public class ResponseActivity extends AppCompatActivity {
             cloudsArray.add(Double.parseDouble(sarr[4]));
             windArray.add(Double.parseDouble(sarr[5]));
         }
+
+
         writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
     }
 
