@@ -1,6 +1,7 @@
 package com.example.camelia.debug6;
 
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -100,6 +101,14 @@ public class CurrentWeatherIntentService extends IntentService{
             //writeToFile(getString(R.string.xsFile), String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", this); //we converted kelvin to celsius
             writeToExternalFile(getString(R.string.xsFile),hour + " " + String.valueOf(currentTemp) + " " + String.valueOf(pressure) + " " + String.valueOf(humid) + " " + String.valueOf(clouds) + " " + String.valueOf(wind) + " final", true); //we converted kelvin to celsius
             writeToExternalFile(getString(R.string.currentDataStrip), String.valueOf(hour/3), false);
+
+            Intent notificationIntent = new Intent(this, MyReceiver.class);
+            PendingIntent notiPendingIntent = PendingIntent.getBroadcast(this, 1, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            try {
+                notiPendingIntent.send();
+            } catch (PendingIntent.CanceledException e) {
+                e.printStackTrace();
+            }
         }
 
         try {

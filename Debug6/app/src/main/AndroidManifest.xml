@@ -30,7 +30,7 @@
             android:exported="false" />
 
         <service
-            android:name=".MyNewIntentService"
+            android:name=".NotificationIntentService"
             android:exported="false" />
 
         <!--

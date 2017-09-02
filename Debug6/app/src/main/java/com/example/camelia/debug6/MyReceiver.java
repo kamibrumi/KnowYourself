@@ -12,7 +12,7 @@ public class MyReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
 
-        Intent intent1 = new Intent(context, MyNewIntentService.class);
+        Intent intent1 = new Intent(context, NotificationIntentService.class);
         context.startService(intent1);
 
     }
