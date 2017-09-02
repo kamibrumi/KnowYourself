@@ -68,6 +68,9 @@ public class ResponseActivity extends AppCompatActivity {
     ProgressBar loading;
     //String cityName;
     int dayOfWeek, dayOfMonth, month, year, hourOfDay, durationInStrips; //day is the the day of week
+    Double latitude, longitude;
+    Location location;
+    LocationManager locationManager;
     String[] strips;
     Double[] happinessLevels;
     Integer[] imageId;
@@ -149,6 +152,8 @@ public class ResponseActivity extends AppCompatActivity {
                     loadMessage.setText("Not sufficient data.");
                     loading.setVisibility(View.GONE);
                 } else {
+                    getLocationAndPredict();
+                    /*
                     BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
                         @Override
                         public void onReceive(Context context, Intent intent) {
@@ -167,7 +172,7 @@ public class ResponseActivity extends AppCompatActivity {
                     };
 
                     LocalBroadcastManager.getInstance(this).registerReceiver(
-                            mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
+                            mMessageReceiver, new IntentFilter("GPSLocationUpdates")); */
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -210,6 +215,7 @@ public class ResponseActivity extends AppCompatActivity {
     } */
 
     public void writeDataAndPredict() {
+        System.out.println("WE ARE INTO WRITEDATAANDPREDICT()");
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run(){
@@ -824,5 +830,76 @@ public class ResponseActivity extends AppCompatActivity {
     private double getStdDev(double variance)
     {
         return Math.sqrt(variance);
+    }
+
+
+    public void getLocationAndPredict(){
+        System.out.println("A INTRAT IN ISLOCATION");
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        //boolean gps_enabled = false;
+        //boolean network_enabled = false;
+        System.out.println("");
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                System.out.println("ON LOCATION CHANGED");
+                locationManager.removeUpdates(this);
+
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+        System.out.println("S-A DECLARAT LISTENER-UL DIN LOCATION");
+        // Register the listener with the Location Manager to receive location updates
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            Toast toast = Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT);
+            toast.show();
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            //return;
+        }
+
+        Boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        if (isNetworkEnabled) {
+            System.out.println("NETWORK ENABLED");
+
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    0,
+                    0, locationListener);
+
+            if (locationManager != null) {
+                System.out.println("LOCATION MANAGER NOT NULL");
+                location = locationManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+                if (location != null) {
+                    System.out.println("LOCATION NOT NULL");
+
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+                    System.out.println("LAT AND LON: " + latitude + " " + longitude);
+
+                    writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
+                    System.out.println("WE WRITE DATA AND PREDICT");
+                    writeDataAndPredict();
+                }
+            }
+        } else {
+            Toast.makeText(ResponseActivity.this, "Your location is disabled! Try again...", Toast.LENGTH_SHORT).show();
+        }
     }
 }
