@@ -48,6 +48,7 @@ import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Objects;
@@ -78,6 +79,7 @@ public class ResponseActivity extends AppCompatActivity {
     int NUMBER_OF_STRIPS_TO_PREDICT = 24;
     ListView list;
     String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    Double[] futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
 
 
     @Override
@@ -109,7 +111,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
-
+        /*
         String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
@@ -122,18 +124,41 @@ public class ResponseActivity extends AppCompatActivity {
             String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
             String[] dataToDisplay = prediction.split("split");
 
+            futureTemps = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+            futurePressures = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+            futureHumidities = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+            futureClouds = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+            futureWind = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+
+
+            String[] temps = readFromInternalFile("futureTemps.txt").split(" ");
+            System.out.println("temps:============================" + Arrays.toString(temps));
+            String[] pressures = readFromInternalFile("futurePressures.txt").split(" ");
+            String[] humidities = readFromInternalFile("futureHumidities.txt").split(" ");
+            String[] clouds = readFromInternalFile("futureClouds.txt").split(" ");
+            String[] wind = readFromInternalFile("futureWind.txt").split(" ");
+
             strips = dataToDisplay[0].split("finStrip");
             for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
 
             String[] preHappinessLevels = dataToDisplay[1].split(" ");
             String[] preImageId = dataToDisplay[2].split(" ");
-            for (int j = 0; j < preImageId.length; ++j) {
+            for (int j = 0; j < NUMBER_OF_STRIPS_TO_PREDICT; ++j) {
+                System.out.println("j =========================== " + j);
                 happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
                 imageId[j] = Integer.parseInt(preImageId[j]);
+
+                futureTemps[j] = Double.parseDouble(temps[j]);
+                futurePressures[j] = Double.parseDouble(pressures[j]);
+                futureHumidities[j] = Double.parseDouble(humidities[j]);
+                futureClouds[j] = Double.parseDouble(clouds[j]);
+                futureWind[j] = Double.parseDouble(wind[j]);
+
+
             }
 
             CustomList adapter = new
-                    CustomList(this, strips, happinessLevels, imageId); //// TODO: 21/08/17 trebuie sa fac ca in post execute sa salvez inr-un string atat array-ul de imagini cat si cel de stripuri si happiness levels 
+                    CustomList(this, strips, happinessLevels, imageId, futureTemps, futurePressures, futureHumidities, futureClouds, futureWind); //// TODO: 21/08/17 trebuie sa fac ca in post execute sa salvez inr-un string atat array-ul de imagini cat si cel de stripuri si happiness levels
             list.setAdapter(adapter);
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -154,66 +179,13 @@ public class ResponseActivity extends AppCompatActivity {
                     loading.setVisibility(View.GONE);
                 } else {
                     getLocationAndPredict();
-                    /*
-                    BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            // Get extra data included in the Intent
-                            //String message = intent.getStringExtra("Status");
-                            Bundle b = intent.getBundleExtra("Location");
-                            Location lastKnownLoc = (Location) b.getParcelable("Location");
-                            if (lastKnownLoc != null) {
-                                writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
-                                System.out.println("write data and predict in RESPONSE ACTIVITY (AR TREBUI SA SE INTAMPLE ASTA SUPA CE SE OBTINE LOCATIA)");
-                                writeDataAndPredict();
-                            }
-                            //tvStatus.setText(message);
-                            // Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                        }
-                    };
-
-                    LocalBroadcastManager.getInstance(this).registerReceiver(
-                            mMessageReceiver, new IntentFilter("GPSLocationUpdates")); */
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        } */
+        getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus 
     }
-        /*
-        try {
-            if (readFromExternalFile(getString(R.string.xsFile)) == "") { // TODO: 17/08/17 daca xs1 ii gol nici macar nu se va ajunge la response activity!! in viitor: cand ii gol, pur si simplu arat predictia
-                String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
-
-                if(prediction == "" || prediction == null) {
-                    loadMessage.setText("Not sufficient data.");
-                    loading.setVisibility(View.GONE);
-                } else {
-                    //dayTv.setText(prediction);
-                    //dayTv.setVisibility(View.VISIBLE);
-                    loading.setVisibility(View.GONE);
-
-                    //String[] dayAndPrediction = prediction.split(" ");
-                    //Double percentage = Double.parseDouble(dayAndPrediction[1]);
-                    //loadMessage.setText(new DecimalFormat("#0.0").format(percentage) + "% GOOD");
-                    loadMessage.setText(prediction);
-                    loadMessage.setTextSize(40);
-                }
-            } else {
-                getLocation();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-/*
-    private int computeHash(String myString) {
-        int hash = 7;
-        for (int i = 0; i < myString.length(); i++) {
-            hash = hash*31 + myString.charAt(i);
-        }
-        return hash;
-    } */
 
     public void writeDataAndPredict() {
         System.out.println("WE ARE INTO WRITEDATAANDPREDICT()");
@@ -368,31 +340,37 @@ public class ResponseActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
                         // TEMPERATURE
-                        futureTemps.add(t);
+                        Double celsiusTemp = t - 273.15;
+                        futureTemps.add(celsiusTemp);
+                        writeToInternalFile("futureTemps.txt", " " + celsiusTemp);
                         futureSumTemp += t;
                         futureAverageTemp = futureSumTemp/futureDurationInStrips;
                         double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTemps));
 
                         // PRESSURE
                         futurePressures.add(pressure);
+                        writeToInternalFile("futurePressures.txt", " " + pressure);
                         futureSumPressure += pressure;
                         futureAveragePressure = futureSumPressure/futureDurationInStrips;
                         double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressures));
 
                         // HUMIDITY
                         futureHumidities.add(humid);
+                        writeToInternalFile("futureHumidities.txt", " " + humid);
                         futureSumHumidity += humid;
                         futureAverageHumidity = futureSumHumidity/futureDurationInStrips;
                         double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumidities));
 
                         // CLOUDS
                         futureClouds.add(clouds);
+                        writeToInternalFile("futureClouds.txt", " " + clouds);
                         futureSumClouds += clouds;
                         futureAverageClouds = futureSumClouds/futureDurationInStrips;
                         double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureClouds));
 
                         // WIND
                         futureWind.add(wind);
+                        writeToInternalFile("futureWind.txt", " " + wind);
                         futureSumWind += wind;
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
@@ -616,8 +594,8 @@ public class ResponseActivity extends AppCompatActivity {
                 //loadMessage.setText(result);
                 //loadMessage.setTextSize(40);
 
-                CustomList adapter = new
-                        CustomList(myResponseActivity, strips, happinessLevels, imageId);
+                //CustomList adapter = new CustomList(myResponseActivity, strips, happinessLevels, imageId);
+                CustomList adapter = new CustomList(myResponseActivity, strips, happinessLevels, imageId, futureTemps, futurePressures, futureHumidities, futureClouds, futureWind);
                 list.setAdapter(adapter);
                 list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 

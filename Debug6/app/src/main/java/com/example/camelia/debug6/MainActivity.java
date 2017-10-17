@@ -89,8 +89,10 @@ public class MainActivity extends AppCompatActivity {
         PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
                 (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService,
-                1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
+        //alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService, // TODO: 17/10/17 UNCOMMMENT THIS AND NEXT LINE
+        //        1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
+
+        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10000, weatherPendingIntent);
     }
 
     @Override

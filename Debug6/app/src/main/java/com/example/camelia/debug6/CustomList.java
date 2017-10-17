@@ -16,13 +16,19 @@ public class CustomList extends ArrayAdapter<String>{
     private final String[] strips;
     private final Double[] happinessLevels;
     private final Integer[] imageId;
+    private final Double[] temp, pres, humid, cloud, wind;
     public CustomList(Activity context,
-                      String[] strips, Double[] happinessLevels, Integer[] imageId) {
+                      String[] strips, Double[] happinessLevels, Integer[] imageId, Double[] temp, Double[] pres, Double[] humid, Double[] cloud, Double[] wind) {
         super(context, R.layout.list_item, strips);
         this.context = context;
         this.strips = strips;
         this.happinessLevels = happinessLevels;
         this.imageId = imageId;
+        this.temp = temp;
+        this.pres = pres;
+        this.humid = humid;
+        this.cloud = cloud;
+        this.wind = wind;
 
     }
     @Override
@@ -32,10 +38,23 @@ public class CustomList extends ArrayAdapter<String>{
         TextView firstLine = (TextView) rowView.findViewById(R.id.firstLine);
         TextView secondLine = (TextView) rowView.findViewById(R.id.secondLine);
 
+        TextView tempT = (TextView) rowView.findViewById(R.id.temp);
+        TextView presT = (TextView) rowView.findViewById(R.id.pres);
+        TextView humidT = (TextView) rowView.findViewById(R.id.humid);
+        TextView cloudT = (TextView) rowView.findViewById(R.id.cloud);
+        TextView windT = (TextView) rowView.findViewById(R.id.wind);
+
+
         ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
         firstLine.setText(strips[position]);
         secondLine.setText(new DecimalFormat("#0").format(happinessLevels[position]) + "% PRODUCTIVE");
         //secondLine.setText(happinessLevels[position] + "% PRODUCTIVE");
+        System.out.println("position in custom list =========================== " + position);
+        tempT.setText("Temperature: " + String.valueOf(temp[position]) + "°");
+        presT.setText("Pressure: " + String.valueOf(pres[position]) + "hPa");
+        humidT.setText("Humidity: " + String.valueOf(humid[position]) + "%");
+        cloudT.setText("Cloudiness: " + String.valueOf(cloud[position]));
+        windT.setText("Wind Speed: " + String.valueOf(wind[position]) + " mps");
 
         imageView.setImageResource(imageId[position]);
         return rowView;
