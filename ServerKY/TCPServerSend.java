@@ -8,19 +8,22 @@ import java.net.Socket;
  */
 public class TCPServerSend extends Thread {
 
-    public static final int SERVERPORT = 43393;
+    //public static final int SERVERPORT = 43393;
+    public static final int SERVERPORT = 20000;
     private boolean running = false;
     private PrintWriter mOut;
     private OnMessageReceived messageListener;
     static  String Ranswer;
 
     public static void main(String[] args) {
-	Ranswer = "";
-	for (int i = 0; i < args.length - 1; ++i) {
-		Ranswer = Ranswer + args[i] + " ";
-		//System.out.println("ARGS " + i + " = " + args[i]);	
-	}
-	Ranswer = Ranswer + args[args.length - 1];
+	Ranswer = "Message to send";
+//	for (int i = 0; i < args.length - 1; ++i) {
+//		Ranswer = Ranswer + args[i] + " ";
+//		//System.out.println("ARGS " + i + " = " + args[i]);	
+//	}
+	System.out.println("Has arribat fins aqui");	
+	//Ranswer = Ranswer + args[args.length - 1];
+	System.out.println("Has arribat fins aqui2");	
 	System.out.println(Ranswer);
 	//we start the server
         TCPServerSend mServer = new TCPServerSend(new TCPServerSend.OnMessageReceived() {
