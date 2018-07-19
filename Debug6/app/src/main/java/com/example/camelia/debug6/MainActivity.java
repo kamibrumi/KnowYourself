@@ -75,30 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        // we calculate the hour when we are going to launch the alarm to retrieve the weather data!
-        Calendar calendar = Calendar.getInstance();
-        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-        int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
-
-        Calendar cal = Calendar.getInstance();
-        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 0); //FIRST HOUR OF THE NEXT STRIP
-        long millisLaunchService = cal.getTimeInMillis();
-        System.out.println("se seteaza ALAAAAAARM!");
-        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
-        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        //alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService, // TODO: 17/10/17 UNCOMMMENT THIS AND NEXT LINE
-        //        1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
-
-        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10000, weatherPendingIntent);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
+        //WE GET THE LOCATION---------------------------------------------
         BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -106,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 //String message = intent.getStringExtra("Status");
                 Bundle b = intent.getBundleExtra("Location");
                 Location lastKnownLoc = (Location) b.getParcelable("Location");
-                if (lastKnownLoc != null) {
+                if (lastKnownLoc == null) {
                     writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
                     System.out.println("SE IA CURRENT WEATHER MULTUMITA LA BROADCAST RECEIVER");
                     collectCurrentWeather();
@@ -127,6 +104,30 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+
+        //----------------------------------------------------------------
+
+
+        // we calculate the hour when we are going to launch the alarm to retrieve the weather data!
+        Calendar calendar = Calendar.getInstance();
+        currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int hourLaunchService = currentHour + 3 - (currentHour%3)%24;
+
+        Calendar cal = Calendar.getInstance();
+        cal.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH),hourLaunchService, 0); //FIRST HOUR OF THE NEXT STRIP
+        long millisLaunchService = cal.getTimeInMillis();
+        System.out.println("se seteaza ALAAAAAARM!");
+        //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
+        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+        PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
+                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        //alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService, // TODO: 17/10/17 UNCOMMMENT THIS AND NEXT LINE
+        //        1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
+
+        alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10000, weatherPendingIntent);
     }
 
     private void collectCurrentWeather() {

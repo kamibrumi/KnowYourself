@@ -54,46 +54,13 @@ public class ServerBoard1 {
 						FileWriter fwFuture = null;
 
 						
-						/*int varPerField = 5 * 8; // number of vars * number of fields
-							String patt = "[1-9] [a-zA-Z]*";
-							String copyPatt = " [-+]?[0-9]*\\.[0-9]*";
-							for (int i = 0; i < varPerField; ++i) {
-								patt = patt + copyPatt;			
-							} */
-							String[] currentAndFutureFiles = message.split("SPLIT");
-							System.out.println("SPLIT in (# parti): " + currentAndFutureFiles.length);
-
-							String[] current = currentAndFutureFiles[0].split(" final");
-							String[] future = currentAndFutureFiles[1].split(" final");
-							//Pattern p = Pattern.compile(patt);
-							//Matcher m = p.matcher(message);
-
-							String currentData = "";
-							String futureData = "";
-							//List<String> lines = new ArrayList<String>();
-							//while (m.find()) {
-								//System.out.println("Found: " + m.group());
-							//	realData = realData + m.group() + System.getProperty("line.separator");
-								//lines.add(m.group());
-							//}
-
-							for (int i = 0; i < current.length; ++i) {
-								currentData = currentData + current[i] + System.getProperty("line.separator");
-							}
-							for (int i = 0; i < future.length; ++i) {
-								futureData = futureData + future[i] + System.getProperty("line.separator");
-							}
 							try {
 
 
-								fwCurrent = new FileWriter("sampleForModel.txt");
+								fwCurrent = new FileWriter("helloWorld.txt");
 								bwCurrent = new BufferedWriter(fwCurrent);
-								bwCurrent.write(currentData);
-
-								fwFuture = new FileWriter("sampleForPrediction.txt");
-								bwFuture = new BufferedWriter(fwFuture);
-								bwFuture.write(futureData);
-
+								bwCurrent.write(message);
+								System.out.println(message);
 								System.out.println("Done");
 
 							} catch (IOException e) {
@@ -107,14 +74,9 @@ public class ServerBoard1 {
 									if (bwCurrent != null)
 										bwCurrent.close();
 
-									if (bwFuture != null)
-										bwFuture.close();
-
 									if (fwCurrent != null)
 										fwCurrent.close();
 
-									if (fwFuture != null)
-										fwFuture.close();
 
 								} catch (IOException ex) {
 

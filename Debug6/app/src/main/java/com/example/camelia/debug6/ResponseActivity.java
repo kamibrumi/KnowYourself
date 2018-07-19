@@ -111,7 +111,7 @@ public class ResponseActivity extends AppCompatActivity {
 
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
-        /*
+
         String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
@@ -183,8 +183,8 @@ public class ResponseActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } */
-        getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus 
+        }
+        //getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus
     }
 
     public void writeDataAndPredict() {
@@ -442,7 +442,7 @@ public class ResponseActivity extends AppCompatActivity {
         System.out.println("INAINTE DE LOCALMODELTASK.EXECUTE");
         // connect to the server
         new LocalModelTask().execute(this);
-        //new connectTask().execute("commit");
+        new connectTask().execute("");
 
     /*    System.out.println("FIRST COMMIT");
         new java.util.Timer().schedule(
@@ -613,13 +613,22 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
 
-/*
+    public void sendMessageToServer(View v) {
+        String message = "Hola Mundo";
+        System.out.println(message);
+        //sends the message to the server
+        if (mTcpClient != null) {
+            //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
+            mTcpClient.sendMessage(message);
+        }
+    }
+
         public class connectTask extends AsyncTask<String,String,TCPClient> {
 
 
         @Override
         protected TCPClient doInBackground(String... message) {
-
+            System.out.println("message of do in backGROUND" + message[0]);
             //we create a TCPClient object and
             mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
                 @Override
@@ -629,14 +638,10 @@ public class ResponseActivity extends AppCompatActivity {
                     publishProgress(message);
                 }
             });
-            System.out.println("message of do in backGROUND" + message[0]);
-            if (message[0] == "commit") {
-                try {
-                    mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)) + "SPLIT" + readFromExternalFile(getString(R.string.predictionDataFile)));
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (message[0] == "commit") {
+                //mTcpClient.run(readFromExternalFile(getString(R.string.currentDataFile)) + "SPLIT" + readFromExternalFile(getString(R.string.predictionDataFile))); TODO DECOMENTEAZA DUPA CE DEBUGHEZI CONEXIUNEA CU SERVERUL
+                mTcpClient.run("");
                 System.out.println("AM COMITEJAT");
             }
             else {
@@ -683,7 +688,7 @@ public class ResponseActivity extends AppCompatActivity {
             mTcpClient.stopClient();
 
         }
-    } */
+    }
 
     public String readFromExternalFile(String filename) throws IOException {
         String root = Environment.getExternalStorageDirectory().toString();

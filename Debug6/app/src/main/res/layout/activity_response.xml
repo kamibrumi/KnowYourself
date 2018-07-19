@@ -40,4 +40,13 @@
         android:layout_width="match_parent">
     </ListView>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send Data"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:onClick="sendMessageToServer"/>
+
+
 </RelativeLayout>
