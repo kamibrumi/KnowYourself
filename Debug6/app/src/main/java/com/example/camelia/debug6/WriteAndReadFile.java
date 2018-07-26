@@ -19,7 +19,7 @@ import java.io.OutputStreamWriter;
  */
 
 public class WriteAndReadFile {
-    private static String dataDirectoryName = "/Know Yourself";
+    public static String dataDirectoryName = "/Know Yourself";
 
     public static void writeToExternalFile(String filename, String data, Boolean append) {
         String root = Environment.getExternalStorageDirectory().toString();

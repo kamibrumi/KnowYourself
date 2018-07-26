@@ -152,24 +152,4 @@ public class LocationService extends Service {
         intent.putExtra("Location", b);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
-
-    private void writeToExternalFile(String filename, String data, Boolean append) {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, filename);
-        try {
-            FileOutputStream fos = new FileOutputStream(file, append);
-            byte[] strb = data.getBytes();
-            for(int i = 0; i < strb.length; ++i) {
-                fos.write(strb[i]);
-            }
-            fos.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("FileStreamsTest: " + e);
-        } catch (IOException e) {
-            System.err.println("FileStreamsTest: " + e);
-        }
-    }
 }

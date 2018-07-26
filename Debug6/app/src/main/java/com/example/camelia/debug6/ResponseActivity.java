@@ -80,6 +80,7 @@ public class ResponseActivity extends AppCompatActivity {
     ListView list;
     String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
     Double[] futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
+    Context thisContext;
 
 
     @Override
@@ -93,6 +94,8 @@ public class ResponseActivity extends AppCompatActivity {
 
         Intent intent = this.getIntent();
         gb = intent.getStringExtra("how");
+
+         thisContext = getApplicationContext();
 
     }
 
@@ -112,7 +115,7 @@ public class ResponseActivity extends AppCompatActivity {
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
-        String predictionStrip = readFromInternalFile(getString(R.string.predictionStripFile));
+        String predictionStrip = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext);
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
             loading.setVisibility(View.GONE);
@@ -121,7 +124,7 @@ public class ResponseActivity extends AppCompatActivity {
             happinessLevels = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
             imageId = new Integer[NUMBER_OF_STRIPS_TO_PREDICT];
 
-            String prediction = readFromInternalFile(getString(R.string.predictionDisplayFile));
+            String prediction = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionDisplayFile), thisContext);
             String[] dataToDisplay = prediction.split("split");
 
             futureTemps = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
@@ -131,12 +134,12 @@ public class ResponseActivity extends AppCompatActivity {
             futureWind = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
 
 
-            String[] temps = readFromInternalFile("futureTemps.txt").split(" ");
+            String[] temps = WriteAndReadFile.readFromInternalFile("futureTemps.txt", thisContext).split(" ");
             System.out.println("temps:============================" + Arrays.toString(temps));
-            String[] pressures = readFromInternalFile("futurePressures.txt").split(" ");
-            String[] humidities = readFromInternalFile("futureHumidities.txt").split(" ");
-            String[] clouds = readFromInternalFile("futureClouds.txt").split(" ");
-            String[] wind = readFromInternalFile("futureWind.txt").split(" ");
+            String[] pressures = WriteAndReadFile.readFromInternalFile("futurePressures.txt", thisContext).split(" ");
+            String[] humidities = WriteAndReadFile.readFromInternalFile("futureHumidities.txt", thisContext).split(" ");
+            String[] clouds = WriteAndReadFile.readFromInternalFile("futureClouds.txt", thisContext).split(" ");
+            String[] wind = WriteAndReadFile.readFromInternalFile("futureWind.txt", thisContext).split(" ");
 
             strips = dataToDisplay[0].split("finStrip");
             for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
@@ -174,7 +177,7 @@ public class ResponseActivity extends AppCompatActivity {
             //loadMessage.setTextSize(40);
         } else {
             try {
-                if (readFromExternalFile(getString(R.string.xsFile)) == "") {
+                if (WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)) == "") {
                     loadMessage.setText("Not sufficient data.");
                     loading.setVisibility(View.GONE);
                 } else {
@@ -184,7 +187,7 @@ public class ResponseActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        //getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus
+        getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus
     }
 
     public void writeDataAndPredict() {
@@ -194,7 +197,7 @@ public class ResponseActivity extends AppCompatActivity {
             public void run(){
                 String cityFile = null;
                 try {
-                    cityFile = readFromExternalFile(getString(R.string.idLatLonFile));
+                    cityFile = WriteAndReadFile.readFromExternalFile(getString(R.string.idLatLonFile));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -342,35 +345,35 @@ public class ResponseActivity extends AppCompatActivity {
                         // TEMPERATURE
                         Double celsiusTemp = t - 273.15;
                         futureTemps.add(celsiusTemp);
-                        writeToInternalFile("futureTemps.txt", " " + celsiusTemp);
+                        WriteAndReadFile.writeToInternalFile("futureTemps.txt", " " + celsiusTemp, thisContext);
                         futureSumTemp += t;
                         futureAverageTemp = futureSumTemp/futureDurationInStrips;
                         double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTemps));
 
                         // PRESSURE
                         futurePressures.add(pressure);
-                        writeToInternalFile("futurePressures.txt", " " + pressure);
+                        WriteAndReadFile.writeToInternalFile("futurePressures.txt", " " + pressure, thisContext);
                         futureSumPressure += pressure;
                         futureAveragePressure = futureSumPressure/futureDurationInStrips;
                         double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressures));
 
                         // HUMIDITY
                         futureHumidities.add(humid);
-                        writeToInternalFile("futureHumidities.txt", " " + humid);
+                        WriteAndReadFile.writeToInternalFile("futureHumidities.txt", " " + humid, thisContext);
                         futureSumHumidity += humid;
                         futureAverageHumidity = futureSumHumidity/futureDurationInStrips;
                         double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumidities));
 
                         // CLOUDS
                         futureClouds.add(clouds);
-                        writeToInternalFile("futureClouds.txt", " " + clouds);
+                        WriteAndReadFile.writeToInternalFile("futureClouds.txt", " " + clouds, thisContext);
                         futureSumClouds += clouds;
                         futureAverageClouds = futureSumClouds/futureDurationInStrips;
                         double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureClouds));
 
                         // WIND
                         futureWind.add(wind);
-                        writeToInternalFile("futureWind.txt", " " + wind);
+                        WriteAndReadFile.writeToInternalFile("futureWind.txt", " " + wind, thisContext);
                         futureSumWind += wind;
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
@@ -378,7 +381,7 @@ public class ResponseActivity extends AppCompatActivity {
                         Boolean append = true;
                         if ( i == 0) append = false;
                         //writting state of the day: 0 given that the crappy library asks for this data
-                        writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + 0 + " " + cityId
+                        WriteAndReadFile.writeToExternalFile(getString(R.string.predictionDataFile), predictionDayOfWeek + " " + 0 + " " + cityId
                                 + " " + futureAverageTemp + " " + futureStdDevTemp
                                 + " " + futureAveragePressure + " " + futureStdDevPressure
                                 + " " + futureAverageHumidity * 1. + " " + futureStdDevHumidity * 1.
@@ -420,7 +423,7 @@ public class ResponseActivity extends AppCompatActivity {
 
                 int stripId = hourOfDay/3;
                 //am inlocuit computeHash(cityName) cu city id
-                writeToExternalFile(getString(R.string.currentDataFile),
+                WriteAndReadFile.writeToExternalFile(getString(R.string.currentDataFile),
                         dayOfWeek + " " + gb + " " + cityId
                         + " " + averageTemp + " " + stdDevTemp
                         + " " + averagePressure + " " + stdDevPressure
@@ -442,7 +445,7 @@ public class ResponseActivity extends AppCompatActivity {
         System.out.println("INAINTE DE LOCALMODELTASK.EXECUTE");
         // connect to the server
         new LocalModelTask().execute(this);
-        new connectTask().execute("");
+        //new connectTask().execute("");
 
     /*    System.out.println("FIRST COMMIT");
         new java.util.Timer().schedule(
@@ -465,36 +468,6 @@ public class ResponseActivity extends AppCompatActivity {
                 },
                 8000
         );*/
-    }
-
-    private void writeToExternalFile(String filename, String data, Boolean append) {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, filename);
-        try {
-            FileOutputStream fos = new FileOutputStream(file, append); //true because we append
-            byte[] strb = data.getBytes();
-            for(int i = 0; i < strb.length; ++i) {
-                fos.write(strb[i]);
-            }
-            fos.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("FileStreamsTest: " + e);
-        } catch (IOException e) {
-            System.err.println("FileStreamsTest: " + e);
-        }
-    }
-
-    private void writeToInternalFile(String fileName, String data) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput(fileName, Context.MODE_PRIVATE));
-            outputStreamWriter.write(data + '\n');
-            outputStreamWriter.close();
-        } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
     }
 
 
@@ -531,7 +504,8 @@ public class ResponseActivity extends AppCompatActivity {
                     //the column containing the prediction variable. This holds in the following
                     //two lines both for train as for test
                     String root = Environment.getExternalStorageDirectory().toString();
-                    File myDir = new File(root + "/docs");
+                    String dirName = WriteAndReadFile.dataDirectoryName;
+                    File myDir = new File(root + dirName);
                     myDir.mkdirs();
 
                     File currentFile = new File (myDir, getString(R.string.currentDataFile));
@@ -568,7 +542,7 @@ public class ResponseActivity extends AppCompatActivity {
                     stripsString += strips[k] + "finStrip";
                 }
 
-                writeToInternalFile(getString(R.string.predictionDisplayFile), stripsString + "split" + result + "split" + imageIdString);
+                WriteAndReadFile.writeToInternalFile(getString(R.string.predictionDisplayFile), stripsString + "split" + result + "split" + imageIdString,thisContext);
 
                 return result;
             }
@@ -579,8 +553,8 @@ public class ResponseActivity extends AppCompatActivity {
 
             protected void onPostExecute(String result) { //you receive the result as a parameter
                 System.out.println("================ON POST EXECUTE==================");
-                writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3));
-                System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + readFromInternalFile(getString(R.string.predictionStripFile)));
+                WriteAndReadFile.writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3), thisContext);
+                System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext));
 
                 //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
                 //dayTv.setVisibility(View.VISIBLE);
@@ -613,6 +587,8 @@ public class ResponseActivity extends AppCompatActivity {
 
         }
 
+        /*
+
     public void sendMessageToServer(View v) {
         String message = "Hola Mundo";
         System.out.println(message);
@@ -621,7 +597,30 @@ public class ResponseActivity extends AppCompatActivity {
             //System.out.println("TCP CLIENT IS NOT NULL (RESPONSE ACTIVITY)");
             mTcpClient.sendMessage(message);
         }
+    } */
+
+    public class connectTask extends AsyncTask<String,String,TCPClient> {
+
+        @Override
+        protected TCPClient doInBackground(String... message) {
+            System.out.println("S-A INTRAT IN DO IN BACKGROUND");
+            //we create a TCPClient object and
+            mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
+                @Override
+                //here the messageReceived method is implemented
+                public void messageReceived(String m) {}
+            });
+            try {
+                mTcpClient.run(WriteAndReadFile.readFromExternalFile(getString(R.string.currentDataFile))); // the message that is sent to the server
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
     }
+
+    /*
 
         public class connectTask extends AsyncTask<String,String,TCPClient> {
 
@@ -656,8 +655,8 @@ public class ResponseActivity extends AppCompatActivity {
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
             System.out.println("SE VA SCRIE IN PREDICTION DISPLAY FILE!!!!!!!!!!!!!!!");
-            if (values[0] != null) writeToInternalFile(getString(R.string.predictionDisplayFile),values[0]); //String.valueOf(dayOfMonth) + " " +
-            writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3));
+            if (values[0] != null) WriteAndReadFile.writeToInternalFile(getString(R.string.predictionDisplayFile),values[0], thisContext); //String.valueOf(dayOfMonth) + " " +
+            WriteAndReadFile.writeToInternalFile(getString(R.string.predictionStripFile), String.valueOf(hourOfDay/3), thisContext);
             System.out.println("CONTINUTUL LUI PREDICTION STRIP din ONPROGRESSUPDATE: ---> " + readFromInternalFile(getString(R.string.predictionStripFile)));
 
             //dayTv.setText("Tomorrow will be"); //// TODO: 14/08/17
@@ -690,78 +689,11 @@ public class ResponseActivity extends AppCompatActivity {
         }
     }
 
-    public String readFromExternalFile(String filename) throws IOException {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, filename);
-        //get InputStream of a file
-        InputStream is = new FileInputStream(file);
-        String strContent;
-
-                /*
-                 * There are several way to convert InputStream to String. First is using
-                 * BufferedReader as given below.
-                 */
-
-        //Create BufferedReader object
-        BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
-        StringBuffer sbfFileContents = new StringBuffer();
-        String line = null;
-
-        //read file line by line
-        while( (line = bReader.readLine()) != null){
-            sbfFileContents.append(line);
-        }
-
-        //finally convert StringBuffer object to String!
-        strContent = sbfFileContents.toString();
-
-                /*
-                 * Second and one liner approach is to use Scanner class. This is only supported
-                 * in Java 1.5 and higher version.
-                 */
-
-        //strContent = new Scanner(is).useDelimiter("\\A").next();
-        return strContent;
-
-    }
-
-    private String readFromInternalFile(String fileName) {
-
-        String ret = "";
-
-        try {
-            InputStream inputStream = this.openFileInput(fileName);
-
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        return ret;
-    }
+    */
 
     private void getArrayLists() throws IOException {
         //String currentData = readFromInternalFile(getString(R.string.xsFile));
-        String currentData = readFromExternalFile(getString(R.string.xsFile));
+        String currentData = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
         durationInStrips = data.length;
 
@@ -780,7 +712,17 @@ public class ResponseActivity extends AppCompatActivity {
         } */
 
         for (int i = Math.max(0, durationInStrips - 3); i < data.length; ++i) {
+            //eroare: data si xs nu au nimic in ele!
+            // data lenght: 1
+            //data[i] =
+            //xs.txt:
+            System.out.println("data lenght: " + data.length);
+            System.out.println("data[i] = " + data[i]);
+            System.out.println("xs.txt: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
+            //System.out.println("" + );
+
             String[] sarr = data[i].split(" ");
+            System.out.println("THIS IS WHERE THE ERROR COMES!------------> " + sarr[1]);
             tempsArray.add(Double.parseDouble(sarr[1]));
             pressuresArray.add(Double.parseDouble(sarr[2]));
             humiditiesArray.add(Double.parseDouble(sarr[3]));
@@ -789,7 +731,7 @@ public class ResponseActivity extends AppCompatActivity {
         }
 
 
-        writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
+        WriteAndReadFile.writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
     }
 
     private double getAverage(ArrayList<Double> arr) {
@@ -879,7 +821,7 @@ public class ResponseActivity extends AppCompatActivity {
                     longitude = location.getLongitude();
                     System.out.println("LAT AND LON: " + latitude + " " + longitude);
 
-                    writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
+                    WriteAndReadFile.writeToExternalFile(getString(R.string.idLatLonFile),latitude + " " + longitude, false);
                     System.out.println("WE WRITE DATA AND PREDICT");
                     writeDataAndPredict();
                 }

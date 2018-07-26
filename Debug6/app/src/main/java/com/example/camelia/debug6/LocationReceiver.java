@@ -15,7 +15,7 @@ public class LocationReceiver extends BroadcastReceiver {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         Boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if(isNetworkEnabled) {
+        if (isNetworkEnabled) {
             Intent i = new Intent(context, LocationService.class);
             context.startService(i);
         }

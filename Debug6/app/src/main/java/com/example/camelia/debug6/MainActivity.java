@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar pB;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
     int currentHour;
+    private int REQUEST_CODE = 1;// the one that identifies the pending intent that sets the collectWeatherAlarm
 
 
     @Override
@@ -62,8 +63,11 @@ public class MainActivity extends AppCompatActivity {
 
         //check whether the app is opened for the very first time. if the file "firstTime" do not exist, then the application is opened for the first time and we create it.
         //if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))){
-        if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))) {
-            writeToInternalFile(getString(R.string.firstTime), "false", this);
+
+        if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))) { // the function readFromInternalFile returns a true if it catches an error if the file firstTime does not exist
+            int currentStrip = getCurrentStrip();
+            WriteAndReadFile.writeToExternalFile(getString(R.string.currentDataStrip), String.valueOf(currentStrip), false);
+            WriteAndReadFile.writeToInternalFile(getString(R.string.firstTime), "false", this);
             LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             if (!isNetworkEnabled) {
@@ -83,10 +87,15 @@ public class MainActivity extends AppCompatActivity {
                 //String message = intent.getStringExtra("Status");
                 Bundle b = intent.getBundleExtra("Location");
                 Location lastKnownLoc = (Location) b.getParcelable("Location");
-                if (lastKnownLoc == null) {
-                    writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
+
+
+                if (lastKnownLoc != null) { //TODO I think is != not ==, we get the location if the location is not null, right?
+                    WriteAndReadFile.writeToExternalFile(getString(R.string.idLatLonFile), lastKnownLoc.getLatitude() + " " + lastKnownLoc.getLongitude(), false);
                     System.out.println("SE IA CURRENT WEATHER MULTUMITA LA BROADCAST RECEIVER");
                     collectCurrentWeather();
+                    Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+                    PendingIntent pendingIntent=PendingIntent.getBroadcast(getApplicationContext(),REQUEST_CODE,weatherIntent,PendingIntent.FLAG_NO_CREATE);
+                    if (pendingIntent==null) setCollectWeatherRepeatingAlarm();
                 }
                 //tvStatus.setText(message);
                 // Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
@@ -95,21 +104,9 @@ public class MainActivity extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mMessageReceiver, new IntentFilter("GPSLocationUpdates"));
+    }
 
-        try {
-            if (readFromExternalFile(getString(R.string.idLatLonFile)) != null) {
-                System.out.println("ID LAT LON FILE IS NOT NULL (S-A INTRAT IN IF-UL DIN ONRESUME)");
-                collectCurrentWeather();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-
-        //----------------------------------------------------------------
-
-
+    private void setCollectWeatherRepeatingAlarm() {
         // we calculate the hour when we are going to launch the alarm to retrieve the weather data!
         Calendar calendar = Calendar.getInstance();
         currentHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -120,9 +117,9 @@ public class MainActivity extends AppCompatActivity {
         long millisLaunchService = cal.getTimeInMillis();
         System.out.println("se seteaza ALAAAAAARM!");
         //WE LAUNCH THE SERVICE THAT WILL RETRIEVE THE WEATHER DATA
-        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class);
+        Intent weatherIntent = new Intent(getApplicationContext(), WeatherReceiver.class); //if it gives an error, comment it!
         PendingIntent weatherPendingIntent = PendingIntent.getBroadcast
-                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                (getApplicationContext(), 1, weatherIntent, PendingIntent.FLAG_UPDATE_CURRENT); //1 is the REQUEST_CODE, that means it identifies this particular pending intent so you can see whether an alarm was set with this pendinf intent
         AlarmManager alarmManager1 = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
         //alarmManager1.setRepeating(AlarmManager.RTC_WAKEUP, millisLaunchService, // TODO: 17/10/17 UNCOMMMENT THIS AND NEXT LINE
         //        1000 * 3 * 60 * 60, weatherPendingIntent); //frequency of currentWeather data is 3h from the the start of the next strip
@@ -133,17 +130,19 @@ public class MainActivity extends AppCompatActivity {
     private void collectCurrentWeather() {
         String lastStripCollectedData = null;
         try {
-            lastStripCollectedData = readFromExternalFile(getString(R.string.currentDataStrip));
+            lastStripCollectedData = WriteAndReadFile.readFromExternalFile(getString(R.string.currentDataStrip));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        int currentStrip = getCurrentStrip();
+        System.out.println("AR TREBUI SA SE LANSEZE SERVICIUL DE CURRENT WEATHER");
+        Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
+        startService(i);
+    }
+
+    public int getCurrentStrip() {
         Calendar calendar = Calendar.getInstance();
-        int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
-        if (lastStripCollectedData == null || lastStripCollectedData == "" || currentStrip != Integer.parseInt(lastStripCollectedData)) {
-            System.out.println("AR TREBUI SA SE LANSEZE SERVICIUL DE CURRENT WEATHER");
-            Intent i = new Intent(getApplicationContext(), CurrentWeatherIntentService.class);
-            startService(i);
-        }
+        return (calendar.get(Calendar.HOUR_OF_DAY)/3);
     }
 
     @Override
@@ -154,83 +153,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(startMain);
     }
 
-    private void writeToInternalFile(String fileName, String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-            outputStreamWriter.write(data + '\n');
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    }
 
-    private void writeToExternalFile(String filename, String data, Boolean append) {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, filename);
-        try {
-            FileOutputStream fos = new FileOutputStream(file, append);
-            byte[] strb = data.getBytes();
-            for(int i = 0; i < strb.length; ++i) {
-                fos.write(strb[i]);
-            }
-            fos.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("FileStreamsTest: " + e);
-        } catch (IOException e) {
-            System.err.println("FileStreamsTest: " + e);
-        }
-    }
-
-
-    //this method contains a modification: it has another return to detect wether a file is null or not (here **)
-    public String readFromExternalFile(String filename) throws IOException {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/docs");
-        myDir.mkdirs();
-
-        File file = new File (myDir, filename);
-        //get InputStream of a file
-        if (file.exists()) {
-            InputStream is = new FileInputStream(file);
-            String strContent = "";
-
-                /*
-                 * There are several way to convert InputStream to String. First is using
-                 * BufferedReader as given below.
-                 */
-
-            //Create BufferedReader object
-            BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
-            StringBuffer sbfFileContents = new StringBuffer();
-            String line = null;
-
-            if ((line = bReader.readLine()) == null) return null; // here **
-            else {
-                sbfFileContents.append(line);
-                //read file line by line
-                while( (line = bReader.readLine()) != null){
-                    sbfFileContents.append(line);
-                }
-            }
-
-
-            //finally convert StringBuffer object to String!
-            strContent = sbfFileContents.toString();
-
-                /*
-                 * Second and one liner approach is to use Scanner class. This is only supported
-                 * in Java 1.5 and higher version.
-                 */
-
-            //strContent = new Scanner(is).useDelimiter("\\A").next();
-            return strContent;
-        }
-        return null;
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void commit(View view) {
@@ -287,8 +210,10 @@ public class MainActivity extends AppCompatActivity {
         catch (FileNotFoundException e) {
             Log.e("login activity", "File not found: " + e.toString());
             if (fileName == getString(R.string.firstTime)) return "true";
+
         } catch (IOException e) {
             Log.e("login activity", "Can not read file: " + e.toString());
+            if (fileName == getString(R.string.firstTime)) return "true";
         }
 
         return ret;
