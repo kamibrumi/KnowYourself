@@ -115,40 +115,65 @@ public class ResponseActivity extends AppCompatActivity {
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
+        String xs = null;
+        try {
+            xs = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String cityFile = null;
+        try {
+            cityFile = WriteAndReadFile.readFromExternalFile(getString(R.string.idLatLonFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         String predictionStrip = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext);
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
             loading.setVisibility(View.GONE);
             loadMessage.setVisibility(View.GONE);
 
-            happinessLevels = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
-            imageId = new Integer[NUMBER_OF_STRIPS_TO_PREDICT];
+            happinessLevels = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
+            imageId = new Integer[NUMBER_OF_STRIPS_TO_PREDICT+1];
 
+            System.out.println(Arrays.toString(happinessLevels));
+            System.out.println(Arrays.toString(imageId));
             String prediction = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionDisplayFile), thisContext);
             String[] dataToDisplay = prediction.split("split");
 
-            futureTemps = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
-            futurePressures = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
-            futureHumidities = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
-            futureClouds = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
-            futureWind = new Double[NUMBER_OF_STRIPS_TO_PREDICT];
+            futureTemps = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
+            futurePressures = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
+            futureHumidities = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
+            futureClouds = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
+            futureWind = new Double[NUMBER_OF_STRIPS_TO_PREDICT+1];
 
 
+            //we get the temp, pres, etc array as strings, after this we use the other arrays in purple as double arrays
+            System.out.println("futureTemps.txt: " + WriteAndReadFile.readFromInternalFile("futureTemps.txt", thisContext));
             String[] temps = WriteAndReadFile.readFromInternalFile("futureTemps.txt", thisContext).split(" ");
-            System.out.println("temps:============================" + Arrays.toString(temps));
             String[] pressures = WriteAndReadFile.readFromInternalFile("futurePressures.txt", thisContext).split(" ");
             String[] humidities = WriteAndReadFile.readFromInternalFile("futureHumidities.txt", thisContext).split(" ");
             String[] clouds = WriteAndReadFile.readFromInternalFile("futureClouds.txt", thisContext).split(" ");
             String[] wind = WriteAndReadFile.readFromInternalFile("futureWind.txt", thisContext).split(" ");
+
+            System.out.println("temps:============================" + Arrays.toString(temps));
+            System.out.println("pres:============================" + Arrays.toString(pressures));
+            System.out.println("humid:============================" + Arrays.toString(humidities));
+            System.out.println("clouds:============================" + Arrays.toString(clouds));
+            System.out.println("wind:============================" + Arrays.toString(wind));
+
 
             strips = dataToDisplay[0].split("finStrip");
             for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
 
             String[] preHappinessLevels = dataToDisplay[1].split(" ");
             String[] preImageId = dataToDisplay[2].split(" ");
-            for (int j = 0; j < NUMBER_OF_STRIPS_TO_PREDICT; ++j) {
+            for (int j = 1; j <= NUMBER_OF_STRIPS_TO_PREDICT; ++j) {
                 System.out.println("j =========================== " + j);
                 happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
+                System.out.println();
                 imageId[j] = Integer.parseInt(preImageId[j]);
 
                 futureTemps[j] = Double.parseDouble(temps[j]);
@@ -161,7 +186,7 @@ public class ResponseActivity extends AppCompatActivity {
             }
 
             CustomList adapter = new
-                    CustomList(this, strips, happinessLevels, imageId, futureTemps, futurePressures, futureHumidities, futureClouds, futureWind); //// TODO: 21/08/17 trebuie sa fac ca in post execute sa salvez inr-un string atat array-ul de imagini cat si cel de stripuri si happiness levels
+                    CustomList(this, strips, happinessLevels, imageId, futureTemps, futurePressures, futureHumidities, futureClouds, futureWind);
             list.setAdapter(adapter);
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -175,19 +200,12 @@ public class ResponseActivity extends AppCompatActivity {
             
             //loadMessage.setText(prediction);
             //loadMessage.setTextSize(40);
+        } else if (xs == "" || xs == null || cityFile == "" || cityFile == null) {
+            loadMessage.setText("Not sufficient data.");
+            loading.setVisibility(View.GONE);
         } else {
-            try {
-                if (WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)) == "") {
-                    loadMessage.setText("Not sufficient data.");
-                    loading.setVisibility(View.GONE);
-                } else {
-                    getLocationAndPredict();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            writeDataAndPredict();
         }
-        getLocationAndPredict(); // TODO: 17/10/17 schoate asta de aici si descomenteaz blocul de mai sus
     }
 
     public void writeDataAndPredict() {
@@ -345,35 +363,36 @@ public class ResponseActivity extends AppCompatActivity {
                         // TEMPERATURE
                         Double celsiusTemp = t - 273.15;
                         futureTemps.add(celsiusTemp);
-                        WriteAndReadFile.writeToInternalFile("futureTemps.txt", " " + celsiusTemp, thisContext);
+                        writeToInternalFile("futureTemps.txt", " " + celsiusTemp, thisContext);
+                        System.out.println("strip "+ i + ": futureTemps.txt: " + WriteAndReadFile.readFromInternalFile("futureTemps.txt", thisContext));
                         futureSumTemp += t;
                         futureAverageTemp = futureSumTemp/futureDurationInStrips;
                         double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTemps));
 
                         // PRESSURE
                         futurePressures.add(pressure);
-                        WriteAndReadFile.writeToInternalFile("futurePressures.txt", " " + pressure, thisContext);
+                        writeToInternalFile("futurePressures.txt", " " + pressure, thisContext);
                         futureSumPressure += pressure;
                         futureAveragePressure = futureSumPressure/futureDurationInStrips;
                         double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressures));
 
                         // HUMIDITY
                         futureHumidities.add(humid);
-                        WriteAndReadFile.writeToInternalFile("futureHumidities.txt", " " + humid, thisContext);
+                        writeToInternalFile("futureHumidities.txt", " " + humid, thisContext);
                         futureSumHumidity += humid;
                         futureAverageHumidity = futureSumHumidity/futureDurationInStrips;
                         double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumidities));
 
                         // CLOUDS
                         futureClouds.add(clouds);
-                        WriteAndReadFile.writeToInternalFile("futureClouds.txt", " " + clouds, thisContext);
+                        writeToInternalFile("futureClouds.txt", " " + clouds, thisContext);
                         futureSumClouds += clouds;
                         futureAverageClouds = futureSumClouds/futureDurationInStrips;
                         double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureClouds));
 
                         // WIND
                         futureWind.add(wind);
-                        WriteAndReadFile.writeToInternalFile("futureWind.txt", " " + wind, thisContext);
+                        writeToInternalFile("futureWind.txt", " " + wind, thisContext);
                         futureSumWind += wind;
                         futureAverageWind = futureSumWind/futureDurationInStrips;
                         double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
@@ -391,15 +410,23 @@ public class ResponseActivity extends AppCompatActivity {
 
                     }
                 }
-
-
-
-                //we calculate averages of the CURRENT strips of hours
+                try {
+                    System.out.println("CE CONTINE XS INAINTE DE GET ARRAYS: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 try { // TODO: 18/08/17 nu are nevoie de exceptie daca xs este un fisier intern. acum este extern
                     getArrayLists();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                try {
+                    System.out.println("CE CONTINE XS DUPA GET ARRAYS: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                WriteAndReadFile.writeToExternalFile(getString(R.string.xsFile), "", false);
 
                 // CURRENT TEMP
                 double averageTemp = getAverage(tempsArray);
@@ -716,22 +743,20 @@ public class ResponseActivity extends AppCompatActivity {
             // data lenght: 1
             //data[i] =
             //xs.txt:
+            System.out.println("Math.max(0, durationInStrips - 3) = "+ Math.max(0, durationInStrips - 3));
             System.out.println("data lenght: " + data.length);
-            System.out.println("data[i] = " + data[i]);
+            System.out.println("data[" + i + "] = " + data[i]);
             System.out.println("xs.txt: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
             //System.out.println("" + );
 
             String[] sarr = data[i].split(" ");
-            System.out.println("THIS IS WHERE THE ERROR COMES!------------> " + sarr[1]);
+            System.out.println("sarr.lenght = " + sarr.length);
             tempsArray.add(Double.parseDouble(sarr[1]));
             pressuresArray.add(Double.parseDouble(sarr[2]));
             humiditiesArray.add(Double.parseDouble(sarr[3]));
             cloudsArray.add(Double.parseDouble(sarr[4]));
             windArray.add(Double.parseDouble(sarr[5]));
         }
-
-
-        WriteAndReadFile.writeToExternalFile(getString(R.string.xsFile), "", false); // TODO: 21/08/17 DESCOMENTEAZA ASTA DUPA PROBA CU LISTVIEW-UL!!!!
     }
 
     private double getAverage(ArrayList<Double> arr) {
@@ -760,7 +785,7 @@ public class ResponseActivity extends AppCompatActivity {
         return Math.sqrt(variance);
     }
 
-
+    /*
     public void getLocationAndPredict(){
         System.out.println("A INTRAT IN ISLOCATION");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -828,6 +853,16 @@ public class ResponseActivity extends AppCompatActivity {
             }
         } else {
             Toast.makeText(ResponseActivity.this, "Your location is disabled! Try again...", Toast.LENGTH_SHORT).show();
+        }
+    } */
+
+    public static void writeToInternalFile(String fileName, String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_APPEND));
+            outputStreamWriter.write(data + '\n');
+            outputStreamWriter.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
         }
     }
 }
