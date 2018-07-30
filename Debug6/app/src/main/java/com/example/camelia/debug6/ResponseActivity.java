@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -76,11 +77,12 @@ public class ResponseActivity extends AppCompatActivity {
     String[] strips;
     Double[] happinessLevels;
     Integer[] imageId;
-    int NUMBER_OF_STRIPS_TO_PREDICT = 24;
+    int NUMBER_OF_STRIPS_TO_PREDICT = 30;
     ListView list;
     String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-    Double[] futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
+    Double[]  futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
     Context thisContext;
+    String xsFileExample = "15 30.510000000000048 1015.0 70.0 0.0 3.6 final";
 
 
     @Override
@@ -108,6 +110,8 @@ public class ResponseActivity extends AppCompatActivity {
         hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
         dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
 
+
+
         //we cancel the notification
         //NotificationManager manager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
         //manager.cancel(123);
@@ -115,12 +119,13 @@ public class ResponseActivity extends AppCompatActivity {
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
+        /*
         String xs = null;
         try {
             xs = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        } */ // TODO: 30/07/18 descomenteaza blocul de mai sus dupa debuggare
 
         String cityFile = null;
         try {
@@ -130,6 +135,10 @@ public class ResponseActivity extends AppCompatActivity {
         }
 
         String predictionStrip = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext);
+
+
+        writeDataAndPredict(); //// TODO: 30/07/18 comenteaza asta si descomenteaza blocul de mai jos cand termini de debuggat! 
+        /*
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
             loading.setVisibility(View.GONE);
@@ -158,6 +167,7 @@ public class ResponseActivity extends AppCompatActivity {
             String[] clouds = WriteAndReadFile.readFromInternalFile("futureClouds.txt", thisContext).split(" ");
             String[] wind = WriteAndReadFile.readFromInternalFile("futureWind.txt", thisContext).split(" ");
 
+
             System.out.println("temps:============================" + Arrays.toString(temps));
             System.out.println("pres:============================" + Arrays.toString(pressures));
             System.out.println("humid:============================" + Arrays.toString(humidities));
@@ -166,11 +176,14 @@ public class ResponseActivity extends AppCompatActivity {
 
 
             strips = dataToDisplay[0].split("finStrip");
-            for(int k = 0; k < strips.length; ++k) System.out.println(strips[k]);
+            System.out.println("strips array: " + Arrays.toString(strips));
+            for(int k = 0; k < strips.length; k++) System.out.println(strips[k]);
 
             String[] preHappinessLevels = dataToDisplay[1].split(" ");
             String[] preImageId = dataToDisplay[2].split(" ");
-            for (int j = 1; j <= NUMBER_OF_STRIPS_TO_PREDICT; ++j) {
+            System.out.println("LENGTHS: " + strips.length + " " + happinessLevels.length + " " + imageId.length + " " + temps.length + " " + pressures.length + " " + humidities.length + " " + clouds.length + " " + wind.length + " " + NUMBER_OF_STRIPS_TO_PREDICT);
+            // LENGTHS: 24 25 25 49 49 49 49 49 24
+            for (int j = 1; j < NUMBER_OF_STRIPS_TO_PREDICT + 1; j++) {
                 System.out.println("j =========================== " + j);
                 happinessLevels[j] = Double.parseDouble(preHappinessLevels[j]);
                 System.out.println();
@@ -205,7 +218,7 @@ public class ResponseActivity extends AppCompatActivity {
             loading.setVisibility(View.GONE);
         } else {
             writeDataAndPredict();
-        }
+        } */
     }
 
     public void writeDataAndPredict() {
@@ -247,13 +260,13 @@ public class ResponseActivity extends AppCompatActivity {
                 //we put underscore in between the words of the cityName
                 String[] cn = cityName.split(" ");
                 String res = "";
-                for (int i = 0; i < cn.length-1; ++i) {
+                for (int i = 0; i < cn.length-1; i++) {
                     res += cn[i] + "_";
                 }
                 res += cn[cn.length - 1];
                 cityName = res; */
 
-                URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba";
+                URL = "http://api.openweathermap.org/data/2.5/forecast?id=" + cityId + "&APPID=afbef7bdcea5f0feb4b7e97fe6b57aba"; //// TODO: 28/07/18 nu inteleg de ce mai cerem inca o data vremea cu un id diferit :/
 
                 weatherData = null;
                 try {
@@ -261,6 +274,7 @@ public class ResponseActivity extends AppCompatActivity {
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
+                Log.i("WEATHER DATA:", weatherData);
                 obj = null;
                 try {
                     obj = new JSONObject(weatherData);
@@ -280,31 +294,31 @@ public class ResponseActivity extends AppCompatActivity {
                 double futureSumTemp = 0;
                 double futureAverageTemp = 0;
 
-                ArrayList<Double> futureTemps = new ArrayList<Double>();
+                ArrayList<Double> futureTempsAL = new ArrayList<Double>();
 
                 // PRESSURE
                 double futureSumPressure = 0;
                 double futureAveragePressure = 0;
 
-                ArrayList<Double> futurePressures = new ArrayList<Double>();
+                ArrayList<Double> futurePressuresAL = new ArrayList<Double>();
 
                 // HUMIDITY
                 double futureSumHumidity = 0;
                 double futureAverageHumidity = 0;
 
-                ArrayList<Double> futureHumidities = new ArrayList<Double>();
+                ArrayList<Double> futureHumiditiesAL = new ArrayList<Double>();
 
                 // CLOUDS
                 double futureSumClouds = 0;
                 double futureAverageClouds = 0;
 
-                ArrayList<Double> futureClouds = new ArrayList<Double>();
+                ArrayList<Double> futureCloudsAL = new ArrayList<Double>();
 
                 // WIND
                 double futureSumWind = 0;
                 double futureAverageWind = 0;
 
-                ArrayList<Double> futureWind = new ArrayList<Double>();
+                ArrayList<Double> futureWindAL = new ArrayList<Double>();
 
                 strips = new String[NUMBER_OF_STRIPS_TO_PREDICT];
 
@@ -316,6 +330,7 @@ public class ResponseActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
+                    System.out.println("DT: " + dt);
                     Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*");
                     Matcher m = p.matcher(dt);
                     int predictionDayOfWeek = 0;
@@ -339,8 +354,8 @@ public class ResponseActivity extends AppCompatActivity {
                         int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
                         int futureStripId = hour/3;
                         int futureDurationInStrips = i + 1;
-                        System.out.println("PREDICION_DAY_OF_WEEK: " + predictionDayOfWeek);
-                        strips[i] = weekDayStrings[predictionDayOfWeek - 1] + " " + hour + "h"; // TODO: 23/08/17 Error!! length=7; index=7. Actializat- vezi daca va mai da probleme!!
+                        System.out.println("PREDICTION_DAY_OF_WEEK: " + predictionDayOfWeek);
+                        strips[i] = weekDayStrings[predictionDayOfWeek - 1] + " " + hour + "h";
 
                         JSONObject main = null;
                         Double t = 25.;
@@ -362,40 +377,40 @@ public class ResponseActivity extends AppCompatActivity {
                         }
                         // TEMPERATURE
                         Double celsiusTemp = t - 273.15;
-                        futureTemps.add(celsiusTemp);
+                        futureTempsAL.add(celsiusTemp);
                         writeToInternalFile("futureTemps.txt", " " + celsiusTemp, thisContext);
                         System.out.println("strip "+ i + ": futureTemps.txt: " + WriteAndReadFile.readFromInternalFile("futureTemps.txt", thisContext));
                         futureSumTemp += t;
                         futureAverageTemp = futureSumTemp/futureDurationInStrips;
-                        double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTemps));
+                        double futureStdDevTemp = getStdDev(getVariance(futureAverageTemp, futureTempsAL));
 
                         // PRESSURE
-                        futurePressures.add(pressure);
+                        futurePressuresAL.add(pressure);
                         writeToInternalFile("futurePressures.txt", " " + pressure, thisContext);
                         futureSumPressure += pressure;
                         futureAveragePressure = futureSumPressure/futureDurationInStrips;
-                        double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressures));
+                        double futureStdDevPressure = getStdDev(getVariance(futureAveragePressure, futurePressuresAL));
 
                         // HUMIDITY
-                        futureHumidities.add(humid);
+                        futureHumiditiesAL.add(humid);
                         writeToInternalFile("futureHumidities.txt", " " + humid, thisContext);
                         futureSumHumidity += humid;
                         futureAverageHumidity = futureSumHumidity/futureDurationInStrips;
-                        double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumidities));
+                        double futureStdDevHumidity = getStdDev(getVariance(futureAverageHumidity, futureHumiditiesAL));
 
                         // CLOUDS
-                        futureClouds.add(clouds);
+                        futureCloudsAL.add(clouds);
                         writeToInternalFile("futureClouds.txt", " " + clouds, thisContext);
                         futureSumClouds += clouds;
                         futureAverageClouds = futureSumClouds/futureDurationInStrips;
-                        double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureClouds));
+                        double futureStdDevClouds = getStdDev(getVariance(futureAverageClouds, futureCloudsAL));
 
                         // WIND
-                        futureWind.add(wind);
+                        futureWindAL.add(wind);
                         writeToInternalFile("futureWind.txt", " " + wind, thisContext);
                         futureSumWind += wind;
                         futureAverageWind = futureSumWind/futureDurationInStrips;
-                        double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWind));
+                        double futureStdDevWind = getStdDev(getVariance(futureAverageWind, futureWindAL));
 
                         Boolean append = true;
                         if ( i == 0) append = false;
@@ -410,6 +425,24 @@ public class ResponseActivity extends AppCompatActivity {
 
                     }
                 }
+
+                futureTemps =  new Double[futureTempsAL.size()];
+                futureTemps = futureTempsAL.toArray(futureTemps);
+
+                futurePressures =  new Double[futurePressuresAL.size()];
+                futurePressures = futurePressuresAL.toArray(futurePressures);
+
+                futureHumidities =  new Double[futureHumiditiesAL.size()];
+                futureHumidities = futureHumiditiesAL.toArray(futureHumidities);
+
+                futureClouds =  new Double[futureCloudsAL.size()];
+                futureClouds = futureCloudsAL.toArray(futureClouds);
+
+                futureWind =  new Double[futureWindAL.size()];
+                futureWind = futureWindAL.toArray(futureWind);
+
+
+
                 try {
                     System.out.println("CE CONTINE XS INAINTE DE GET ARRAYS: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
                 } catch (IOException e) {
@@ -472,6 +505,7 @@ public class ResponseActivity extends AppCompatActivity {
         System.out.println("INAINTE DE LOCALMODELTASK.EXECUTE");
         // connect to the server
         new LocalModelTask().execute(this);
+        System.out.println("DEBUGGING 8");
         //new connectTask().execute("");
 
     /*    System.out.println("FIRST COMMIT");
@@ -519,13 +553,14 @@ public class ResponseActivity extends AppCompatActivity {
                     String[] attributesArray = {"day", "loc", "avgTemp", "stdDevTemp", "avgPres", "stdDevPres",
                             "avgHumid", "stdDevHumid", "avgClouds", "stdDevClouds", "avgWind", "stdDevWind", "stripId",
                             "durationInStrips"};
-                    for (int i = 0; i < numberOfVariables; ++i) {
+                    for (int i = 0; i < numberOfVariables; i++) {
                         if (i <= 1) //the first three attributes are the only nominal
                             attributes[i] = new NominalAttribute(attributesArray[i]);
                         else{
                             attributes[i] = new NumericAttribute(attributesArray[i]);
                         }
                     }
+                    System.out.println("DEBUGGING 1");
                     parser.setResponseIndex(new NumericAttribute("goodBad"), 1); //the second attr is the gb
                     //I have verified in the code that the parse() routine explicitly avoids
                     //the column containing the prediction variable. This holds in the following
@@ -534,7 +569,7 @@ public class ResponseActivity extends AppCompatActivity {
                     String dirName = WriteAndReadFile.dataDirectoryName;
                     File myDir = new File(root + dirName);
                     myDir.mkdirs();
-
+                    System.out.println("DEBUGGING 2");
                     File currentFile = new File (myDir, getString(R.string.currentDataFile));
                     AttributeDataset train = parser.parse("TrainingData", attributes, currentFile);
                     File predictionFile = new File (myDir, getString(R.string.predictionDataFile));
@@ -548,6 +583,8 @@ public class ResponseActivity extends AppCompatActivity {
                     int error = 0;
                     happinessLevels = new Double[testx.length];
                     imageId = new Integer[testx.length];
+                    System.out.println("DEBUGGING 3");
+
                     for (int i = 0; i < testx.length; i++) {
                         String resultToAppend = tree.predict(testx[i]) + "";
                         result = result + resultToAppend + " ";
@@ -559,14 +596,15 @@ public class ResponseActivity extends AppCompatActivity {
                         else if (level < 80.) imageId[i] = R.mipmap.happy;
                         else imageId[i] = R.mipmap.very_happy;
                         imageIdString += String.valueOf(imageId[i]) + " ";
-
+                        System.out.println("DEBUGGING 4" + i);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 String stripsString = "";
-                for (int k = 0; k < strips.length; ++k) {
+                for (int k = 0; k < strips.length; k++) {
                     stripsString += strips[k] + "finStrip";
+                    System.out.println("DEBUGGING 5" + k);
                 }
 
                 WriteAndReadFile.writeToInternalFile(getString(R.string.predictionDisplayFile), stripsString + "split" + result + "split" + imageIdString,thisContext);
@@ -596,8 +634,20 @@ public class ResponseActivity extends AppCompatActivity {
                 //loadMessage.setTextSize(40);
 
                 //CustomList adapter = new CustomList(myResponseActivity, strips, happinessLevels, imageId);
+                System.out.println("DEBUGGING 6");
+                System.out.println("DEBUGGING STRIPS: " + Arrays.toString(strips));
+                System.out.println("DEBUGGING happinessLevels: " + Arrays.toString(happinessLevels));
+                System.out.println("DEBUGGING imageId: " + Arrays.toString(imageId));
+                System.out.println("DEBUGGING futureTemps: " + Arrays.toString(futureTemps));
+                System.out.println("DEBUGGING futurePressures: " + Arrays.toString(futurePressures));
+                System.out.println("DEBUGGING futureHumidities: " + Arrays.toString(futureHumidities));
+                System.out.println("DEBUGGING futureClouds: " + Arrays.toString(futureClouds));
+                System.out.println("DEBUGGING futureWind: " + Arrays.toString(futureWind));
+
+
                 CustomList adapter = new CustomList(myResponseActivity, strips, happinessLevels, imageId, futureTemps, futurePressures, futureHumidities, futureClouds, futureWind);
                 list.setAdapter(adapter);
+                System.out.println("DEBUGGING 7");
                 list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
                     @Override
@@ -720,16 +770,20 @@ public class ResponseActivity extends AppCompatActivity {
 
     private void getArrayLists() throws IOException {
         //String currentData = readFromInternalFile(getString(R.string.xsFile));
-        String currentData = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
+        //String currentData = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)); // TODO: 30/07/18 descomenteaza linia asta dupa debuggare
+        String currentData = xsFileExample; // // TODO: 30/07/18 comenteaza linia asta dupa debuggare
         String[] data = currentData.split(" final");
+        System.out.println("current data = " + currentData);
         durationInStrips = data.length;
+        System.out.println(data.length);
+        System.out.println("duration in strips: " + durationInStrips);
 
         tempsArray = new ArrayList<>();
         pressuresArray = new ArrayList<>();
         humiditiesArray = new ArrayList<>();
         cloudsArray = new ArrayList<>();
         windArray = new ArrayList<>();
-        /*for (int i = 0; i < data.length; ++i) { TODO descomenteaza asta daca nu o sa mai avem nevoie de ora la care a fost luata fiecare mostra de current weather
+        /*for (int i = 0; i < data.length; i++) { TODO descomenteaza asta daca nu o sa mai avem nevoie de ora la care a fost luata fiecare mostra de current weather
             String[] sarr = data[i].split(" ");
             tempsArray.add(Double.parseDouble(sarr[0]));
             pressuresArray.add(Double.parseDouble(sarr[1]));
@@ -738,7 +792,7 @@ public class ResponseActivity extends AppCompatActivity {
             windArray.add(Double.parseDouble(sarr[4]));
         } */
 
-        for (int i = Math.max(0, durationInStrips - 3); i < data.length; ++i) {
+        for (int i = Math.max(0, durationInStrips - 3); i < data.length; i++) {
             //eroare: data si xs nu au nimic in ele!
             // data lenght: 1
             //data[i] =
@@ -762,7 +816,7 @@ public class ResponseActivity extends AppCompatActivity {
     private double getAverage(ArrayList<Double> arr) {
         Double sum = .0;
         int s = arr.size();
-        for(int i = 0; i < s; ++i) {
+        for(int i = 0; i < s; i++) {
             sum += arr.get(i);
         }
         //System.out.println("PRINT 11(get average) --------------");
@@ -774,7 +828,7 @@ public class ResponseActivity extends AppCompatActivity {
     {
         double sum = 0;
         int s = arr.size();
-        for(int i = 0; i < s; ++i)
+        for(int i = 0; i < s; i++)
             sum += (arr.get(i)-average)*(arr.get(i)-average);
         //System.out.println("PRINT 12(get variance) --------------");
         return sum/s;

@@ -50,6 +50,8 @@ public class CustomList extends ArrayAdapter<String>{
         secondLine.setText(new DecimalFormat("#0").format(happinessLevels[position]) + "% PRODUCTIVE");
         //secondLine.setText(happinessLevels[position] + "% PRODUCTIVE");
         System.out.println("position in custom list =========================== " + position);
+        System.out.println("DEBUGGING ");
+        System.out.println("DEBUGGING temp.length: " + temp.length);
         tempT.setText("Temperature: " + String.valueOf(temp[position]) + "°");
         presT.setText("Pressure: " + String.valueOf(pres[position]) + "hPa");
         humidT.setText("Humidity: " + String.valueOf(humid[position]) + "%");

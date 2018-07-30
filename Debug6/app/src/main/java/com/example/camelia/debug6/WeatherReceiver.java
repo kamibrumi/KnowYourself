@@ -32,12 +32,14 @@ public class WeatherReceiver extends BroadcastReceiver {
         }
         Calendar calendar = Calendar.getInstance();
         int currentStrip = calendar.get(Calendar.HOUR_OF_DAY)/3;
-        /*
+
+
         if (lastStripCollectedData == null || lastStripCollectedData == "" || currentStrip != Integer.parseInt(lastStripCollectedData)) {
             Intent i = new Intent(context, CurrentWeatherIntentService.class);
             context.startService(i);
-        }*/
-        Intent i = new Intent(context, CurrentWeatherIntentService.class);
-        context.startService(i);
+        }
+        //Intent i = new Intent(context, CurrentWeatherIntentService.class);
+        //context.startService(i);
+
     }
 }
