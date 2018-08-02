@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         if (Boolean.valueOf(readFromInternalFile(getString(R.string.firstTime)))) { // the function readFromInternalFile returns a true if it catches an error if the file firstTime does not exist
             int currentStrip = getCurrentStrip();
             WriteAndReadFile.writeToExternalFile(getString(R.string.currentDataStrip), String.valueOf(currentStrip), false);
-            WriteAndReadFile.writeToInternalFile(getString(R.string.firstTime), "false", this);
+            WriteAndReadFile.writeToInternalFile(getString(R.string.firstTime), "false", this, Context.MODE_PRIVATE);
             LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             if (!isNetworkEnabled) {

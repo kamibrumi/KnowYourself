@@ -41,9 +41,9 @@ public class WriteAndReadFile {
         }
     }
 
-    public static void writeToInternalFile(String fileName, String data, Context context) {
+    public static void writeToInternalFile(String fileName, String data, Context context, int MODE) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, MODE)); // inainte era: Context.MODE_PRIVATE
             outputStreamWriter.write(data + '\n');
             outputStreamWriter.close();
         } catch (IOException e) {

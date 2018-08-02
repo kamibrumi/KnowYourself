@@ -52,11 +52,12 @@ public class CustomList extends ArrayAdapter<String>{
         System.out.println("position in custom list =========================== " + position);
         System.out.println("DEBUGGING ");
         System.out.println("DEBUGGING temp.length: " + temp.length);
-        tempT.setText("Temperature: " + String.valueOf(temp[position]) + "°");
-        presT.setText("Pressure: " + String.valueOf(pres[position]) + "hPa");
-        humidT.setText("Humidity: " + String.valueOf(humid[position]) + "%");
-        cloudT.setText("Cloudiness: " + String.valueOf(cloud[position]));
-        windT.setText("Wind Speed: " + String.valueOf(wind[position]) + " mps");
+        //tempT.setText("Temperature: " + String.valueOf(temp[position]) + "°"); // TODO: 2/08/18  new DecimalFormat("#0").format(temp[position])
+        tempT.setText("Temperature: " +  new DecimalFormat("#0").format(temp[position]) + "°");
+        presT.setText("Pressure: " +  new DecimalFormat("#0").format(pres[position]) + "hPa");
+        humidT.setText("Humidity: " +  new DecimalFormat("#0").format(humid[position]) + "%");
+        cloudT.setText("Cloudiness: " +  new DecimalFormat("#0").format(cloud[position]));
+        windT.setText("Wind Speed: " +  new DecimalFormat("#0").format(wind[position]) + " mps");
 
         imageView.setImageResource(imageId[position]);
         return rowView;

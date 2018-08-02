@@ -40,8 +40,8 @@ public class LocationService extends Service {
             System.out.println("latitude is " + mLastLocation.getLatitude());
             System.out.println("longitude is " + mLastLocation.getLongitude());
             sendMessageToActivity(mLastLocation, "");
-            //writeToExternalFile(getString(R.string.idLatLonFile), mLastLocation.getLatitude() + " " + mLastLocation.getLongitude(), false);
-            onDestroy();
+            WriteAndReadFile.writeToExternalFile(getString(R.string.idLatLonFile), mLastLocation.getLatitude() + " " + mLastLocation.getLongitude(), false);
+            //onDestroy();
         }
 
         @Override
@@ -57,6 +57,7 @@ public class LocationService extends Service {
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.e(TAG, "onStatusChanged: " + provider);
+            WriteAndReadFile.writeToExternalFile(getString(R.string.idLatLonFile), mLastLocation.getLatitude() + " " + mLastLocation.getLongitude(), false);
         }
     }
 
