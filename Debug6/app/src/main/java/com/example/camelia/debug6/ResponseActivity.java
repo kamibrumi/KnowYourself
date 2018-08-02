@@ -82,7 +82,7 @@ public class ResponseActivity extends AppCompatActivity {
     String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
     Double[]  futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
     Context thisContext;
-    String xsFileExample = "15 30.510000000000048 1015.0 70.0 0.0 3.6 final";
+    //String xsFileExample = "15 30.510000000000048 1015.0 70.0 0.0 3.6 final";
 
 
     @Override
@@ -119,13 +119,13 @@ public class ResponseActivity extends AppCompatActivity {
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
-        /*
+
         String xs = null;
         try {
             xs = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
         } catch (IOException e) {
             e.printStackTrace();
-        } */ // TODO: 30/07/18 descomenteaza blocul de mai sus dupa debuggare
+        }
 
         String cityFile = null;
         try {
@@ -137,7 +137,7 @@ public class ResponseActivity extends AppCompatActivity {
         String predictionStrip = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext);
 
 
-        String xs = xsFileExample;
+        //String xs = xsFileExample;
         if (Objects.equals(predictionStrip, String.valueOf(hourOfDay / 3))) {
             System.out.println("DECI PREDSTRIP IS THE SAME AS THE ACTUAL");
             loading.setVisibility(View.GONE);
@@ -776,8 +776,7 @@ public class ResponseActivity extends AppCompatActivity {
 
     private void getArrayLists() throws IOException {
         //String currentData = readFromInternalFile(getString(R.string.xsFile));
-        //String currentData = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)); // TODO: 30/07/18 descomenteaza linia asta dupa debuggare
-        String currentData = xsFileExample; // // TODO: 30/07/18 comenteaza linia asta dupa debuggare
+        String currentData = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
         String[] data = currentData.split(" final");
         System.out.println("current data = " + currentData);
         durationInStrips = data.length;
