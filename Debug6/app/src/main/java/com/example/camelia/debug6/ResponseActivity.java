@@ -214,6 +214,15 @@ public class ResponseActivity extends AppCompatActivity {
             loadMessage.setText("Not sufficient data.");
             loading.setVisibility(View.GONE);
         } else {
+            //[Iuli] Starting accuracy computing
+            //Predicted data
+/*
+            int stripIdx = hourOfDay/3 - Integer.parseInt(predictionStrip);
+            String prediction = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionDisplayFile), thisContext);
+            String[] dataToDisplay = prediction.split("split");
+            String[] preHappinessLevels = dataToDisplay[1].split(" ");
+            preHappinessLevels[stripIdx];*/
+            //[Iuli] Ending accuracy computing
             writeDataAndPredict();
         }
     }
@@ -578,6 +587,7 @@ public class ResponseActivity extends AppCompatActivity {
                     System.out.println("DEBUGGING 2");
                     File currentFile = new File (myDir, getString(R.string.currentDataFile));
                     AttributeDataset train = parser.parse("TrainingData", attributes, currentFile);
+                    //System.out.println()
                     File predictionFile = new File (myDir, getString(R.string.predictionDataFile));
                     AttributeDataset test = parser.parse("TestData", attributes, predictionFile);
                     double[][] x = train.toArray(new double[train.size()][]);
