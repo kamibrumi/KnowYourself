@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.camelia.debug6.MainActivity"
+    android:padding="15dp"
+    android:background="@drawable/background">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/raspuns"
+        android:layout_marginTop="20dp"/>
+
+    <!--
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="HEy!"
+        android:id="@+id/debug"
+        android:layout_below="@+id/commit"/> -->
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/progressTracker"
+        android:layout_centerHorizontal="true"
+        android:text="HOW DO YOU FEEL?"
+        android:id="@+id/feel"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:gravity="center"
+        android:id="@+id/progressTracker">
+
+        <Button
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/down"
+            android:onClick="decrementProgressBar"
+            android:background="@mipmap/down_thumb"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:progress="50"
+            android:padding="20dp" />
+
+        <Button
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/up"
+            android:onClick="incrementProgressBar"
+            android:background="@mipmap/up_thumb"/>
+    </LinearLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Predict"
+        android:id="@+id/commit"
+        android:layout_below="@id/progressTracker"
+        android:layout_centerHorizontal="true"
+        android:layout_alignEnd="@id/feel"
+        android:layout_alignStart="@id/feel"
+        android:layout_alignRight="@id/feel"
+        android:layout_alignLeft="@id/feel"
+        android:visibility="visible"
+        android:onClick="commit"/>
+
+</RelativeLayout>

@@ -1,0 +1,116 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="6dip"
+    android:background="#802E4052"
+    android:layout_margin="10dp"
+    >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="2">
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="6dip"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            android:id="@+id/firstLine"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignWithParentIfMissing="true"
+            android:layout_toRightOf="@id/icon"
+            android:gravity="center_vertical"
+            android:text="Date and Hour"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/secondLine"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/firstLine"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/icon"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="happiness level"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:orientation="vertical"
+        android:layout_weight="1">
+        <TextView
+            android:id="@+id/temp"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="26dip"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="Temperature"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/pres"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="26dip"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="Pressure"
+            android:textSize="12sp" />
+        <TextView
+            android:id="@+id/humid"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="26dip"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="Humidity"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/cloud"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="26dip"
+            android:layout_below="@id/firstLine"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/icon"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="Description"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/wind"
+            android:textColor="#ffffff"
+            android:layout_width="fill_parent"
+            android:layout_height="26dip"
+            android:layout_below="@id/firstLine"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/icon"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:text="Wind Speed"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</LinearLayout>
