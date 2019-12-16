@@ -82,7 +82,8 @@ public class ResponseActivity extends AppCompatActivity {
     String[] weekDayStrings = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
     Double[]  futureTemps, futurePressures, futureHumidities, futureClouds, futureWind;
     Context thisContext;
-    //String xsFileExample = "15 30.510000000000048 1015.0 70.0 0.0 3.6 final";
+    //String xsFileExample = "15 30.510000000000048 1015.0 70.0 0.0 3.6 final"; //// TODO: 1/09/18 comment line for production
+    String cityFile;
 
 
     @Override
@@ -119,20 +120,24 @@ public class ResponseActivity extends AppCompatActivity {
         //isFromMain = Boolean.valueOf(readFromInternalFile(getString(R.string.isFromMain)));
         //writeToInternalFile(getString(R.string.isFromMain), String.valueOf(false));
 
+        cityFile = "42.264175 -71.807292"; //TODO: 1/09/18 comment lines for production
+
 
         String xs = null;
         try {
+            WriteAndReadFile.writeToExternalFile(getString(R.string.xsFile), "15 30.510000000000048 1015.0 70.0 0.0 3.6 final", false); //// TODO: 1/09/18 comment this line for production
             xs = WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        String cityFile = null;
+        /*  //// TODO: 1/09/18 uncomment lines for production
+        cityFile = null;
         try {
             cityFile = WriteAndReadFile.readFromExternalFile(getString(R.string.idLatLonFile));
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        } */
 
         String predictionStrip = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionStripFile), thisContext);
 
@@ -210,19 +215,48 @@ public class ResponseActivity extends AppCompatActivity {
             
             //loadMessage.setText(prediction);
             //loadMessage.setTextSize(40);
-        } else if (xs == "" || xs == null || cityFile == "" || cityFile == null) {
-            loadMessage.setText("Not sufficient data.");
+        } else if (xs == null || cityFile == null || xs == "" || cityFile == "" ) {
+            System.out.println("XS FILE CONTSINS: "+ xs + " AND CITYFILE CONTAINS: " + cityFile);
+            loadMessage.setText("Location not collected or not sufficient data.");
             loading.setVisibility(View.GONE);
         } else {
             //[Iuli] Starting accuracy computing
-            //Predicted data
+            //Predicted data. hourOfDay is the time of the current prediction. predictionStrip contains info about the last time when
+            //a prediction was made
+            /*Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*");
+            Matcher m = p.matcher(dt);
+            int predictionDayOfWeek = 0;
+            if(m.find()) {
+                String date = m.group();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); //here the hour is missing.
+                Calendar c = Calendar.getInstance();
+                try {
+                    c.setTime(sdf.parse(date));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                predictionDayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+            }
+                                Pattern hourP = Pattern.compile("[0-9]*:[0-9]*:[0-9]*");
+                    Matcher hourM = hourP.matcher(dt);
+                    if (hourM.find()) {
+                        //System.out.println("ORA: " + hourM.group());
+                        int hour = Integer.parseInt(hourM.group().substring(0, 2)); // we get the hour int
+                        int futureStripId = hour/3;
+                        int futureDurationInStrips = i + 1;
+                        System.out.println("PREDICTION_DAY_OF_WEEK: " + predictionDayOfWeek);
+                        strips[i] = weekDayStrings[predictionDayOfWeek - 1] + " " + hour + "h"; //so the previous strip is already in this format
+            */
 /*
+            //TODO: just substract the days (measured in hours) and add the substraction of the hours
             int stripIdx = hourOfDay/3 - Integer.parseInt(predictionStrip);
             String prediction = WriteAndReadFile.readFromInternalFile(getString(R.string.predictionDisplayFile), thisContext);
             String[] dataToDisplay = prediction.split("split");
             String[] preHappinessLevels = dataToDisplay[1].split(" ");
             preHappinessLevels[stripIdx];*/
             //[Iuli] Ending accuracy computing
+
             writeDataAndPredict();
         }
     }
@@ -241,13 +275,6 @@ public class ResponseActivity extends AppCompatActivity {
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run(){
-                String cityFile = null;
-                try {
-                    cityFile = WriteAndReadFile.readFromExternalFile(getString(R.string.idLatLonFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
                 System.out.println("CITYFILE CONTENT: " + cityFile);
                 String[] idll = cityFile.split(" ");
                 double lat, lon;
@@ -463,13 +490,8 @@ public class ResponseActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                try { // TODO: 18/08/17 nu are nevoie de exceptie daca xs este un fisier intern. acum este extern
-                    getArrayLists();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 try {
-                    System.out.println("CE CONTINE XS DUPA GET ARRAYS: " + WriteAndReadFile.readFromExternalFile(getString(R.string.xsFile)));
+                    getArrayLists();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

@@ -45,8 +45,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Calendar;
 import java.util.Objects;
-
-public class MainActivity extends AppCompatActivity {
+External
+public class MainActivity extends AppCompatActivity { //// TODO: 1/09/18 verifica daca am facut faza cu daca usuario nu intra timp de o saptamana pe aplicatie sa se stearga xs file-ul
     Button commitB;
     ProgressBar pB;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     startService(locationService);
                     //writeToInternalFile(getString(R.string.isFromMain), "true", this); // TODO: 15/08/17 make it false when in response activity
                     System.out.println("how was my day------------> " + howWasYourDay);
+
                     Intent intent = new Intent(this, ResponseActivity.class);
                     intent.putExtra("how", String.valueOf(howWasYourDay));
                     startActivity(intent);
